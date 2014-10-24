@@ -115,8 +115,9 @@ class XBMC_NHL_GameCenter(object):
 		home_team_score, away_team_score = None, None
 		game['id'] = game['id'].zfill(4)
 		if game['id'] in scoreboard:
-			home_team_score = scoreboard[game['id']]['hts']
-			away_team_score = scoreboard[game['id']]['ats']
+			if str(scoreboard[game['id']]['hts']) != '' and str(scoreboard[game['id']]['ats']) != '':
+				home_team_score = str(scoreboard[game['id']]['hts'])
+				away_team_score = str(scoreboard[game['id']]['ats'])
 		if self.team_info_key is not None:
 			home_team = self.team_info[home_team][self.team_info_key]
 			away_team = self.team_info[away_team][self.team_info_key]
@@ -150,7 +151,7 @@ class XBMC_NHL_GameCenter(object):
 
 		# Handle showing the game score.
 		if self.show_scores and home_team_score is not None and away_team_score is not None:
-			title += ' (%d-%d)' % (home_team_score, away_team_score)
+			title += ' (%s-%s)' % (home_team_score, away_team_score)
 
 		# Prepend the game start time.
 		return startTimeLocal + ': ' + title
