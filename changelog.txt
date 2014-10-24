@@ -3,3 +3,6 @@ v0.0.1 (October 24th, 2014)
 
 v0.0.2 (October 24th, 2014)
 - Fixed score display errors in the games list
+
+v0.0.3 (October 24th, 2014)
+- Fixed an error when "Display team name as" was set to "city"

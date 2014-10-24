@@ -58,7 +58,7 @@ class XBMC_NHL_GameCenter(object):
 		elif team_names_setting == 3:
 			self.team_info_key = None
 		else:
-			team_names = 'city'
+			self.team_info_key = 'city'
 		self.show_scores = __addon__.getSetting('show_scores') == 'true'
 		self.at_instead_of_vs = __addon__.getSetting('at_instead_of_vs') == 'true'
 
