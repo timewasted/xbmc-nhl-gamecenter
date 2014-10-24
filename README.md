@@ -7,6 +7,14 @@ This plugin requires a valid subscription to NHL GameCenter, and is subject to l
 
 **THIS PLUGIN IS COMPLETELY UNOFFICIAL AND IS NOT ENDORSED BY THE NHL OR ANYONE ASSOCIATED WITH THE NHL.**
 
+Requirements:
+-------------
+
+The following packages are required for correct operation:
+
+* [Requests v2.3.0](http://mirrors.xbmc.org/addons/frodo/script.module.requests/)
+* [XMLToDict v0.9.0](http://mirrors.xbmc.org/addons/frodo/script.module.xmltodict/)
+
 License:
 --------
 ```
