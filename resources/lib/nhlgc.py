@@ -21,6 +21,7 @@ class nhlgc(object):
 			'console':       'https://gamecenter.nhl.com/nhlgc/servlets/simpleconsole',
 			'games-list':    'https://gamecenter.nhl.com/nhlgc/servlets/games',
 			'publish-point': 'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
+			'highlights':    'http://video.nhl.com/videocenter/servlets/playlist',
 		}
 		self.username = username
 		self.password = password
@@ -202,6 +203,36 @@ class nhlgc(object):
 			raise self.NetworkError(fn_name, error)
 
 		return playlists
+
+	def get_game_highlights(self, season, game_id):
+		fn_name = 'get_game_highlights'
+
+		base_id = season + '02' + game_id.zfill(4)
+		home_suffix, away_suffix = '-X-h', '-X-a'
+		params = {
+			'format': 'json',
+			'ids': base_id + home_suffix + ',' + base_id + away_suffix,
+		}
+		try:
+			r = requests.get(self.urls['highlights'], params=params, cookies=None)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		if r.text.strip() == '':
+			return {}
+		highlights = json.loads(r.text)
+
+		highlights_dict = {}
+		for details in highlights:
+			if details['id'] == base_id + home_suffix:
+				highlights_dict['home'] = details
+			elif details['id'] == base_id + away_suffix:
+				highlights_dict['away'] = details
+
+		return highlights_dict
 
 	def get_authorized_stream_url(self, m3u8_url):
 		fn_name = 'get_authorized_stream_url'
