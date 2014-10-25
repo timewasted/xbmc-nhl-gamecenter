@@ -6,3 +6,6 @@ v0.0.2 (October 24th, 2014)
 
 v0.0.3 (October 24th, 2014)
 - Fixed an error when "Display team name as" was set to "city"
+
+v0.0.4 (October 25th, 2014)
+- Clean up error handling and recovery

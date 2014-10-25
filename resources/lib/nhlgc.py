@@ -12,7 +12,7 @@ except ImportError:
 from datetime import date
 
 class nhlgc(object):
-	NETWORK_ERR_NON_200 = 'received a non-200 HTTP response.'
+	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
 
 	def __init__(self, username, password, rogers_login, cookies_file):
 		self.urls = {
@@ -41,29 +41,29 @@ class nhlgc(object):
 		try:
 			self.session.post(self.urls['console'], data={'isFlex': 'true'})
 		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError('login', error)
+			raise self.NetworkError('__init__', error)
 		self.save_cookies()
 
 	class LogicError(Exception):
 		def __init__(self, fn_name, message):
-			self.fn_name = fn_name
-			self.message = message
+			self.fn_name = str(fn_name)
+			self.message = str(message)
 		def __str__(self):
-			return '%s failed: %s' %(self.fn_name, repr(self.message))
+			return '%s[CR](function: %s)' % (self.message, self.fn_name)
 
 	class NetworkError(Exception):
 		def __init__(self, fn_name, message, status_code=-1):
-			self.fn_name = fn_name
-			self.message = message
-			self.status_code = status_code
+			self.fn_name = str(fn_name)
+			self.message = str(message)
+			self.status_code = int(status_code)
 		def __str__(self):
 			if self.status_code != -1:
-				return '%s failed: %s (status: %d)' %(self.fn_name, repr(self.message), self.status_code)
-			return '%s failed: %s' %(self.fn_name, repr(self.message))
+				return '%s[CR](status: %d, function: %s)' % (self.message, self.status_code, self.fn_name)
+			return '%s[CR](function: %s)' % (self.message, self.fn_name)
 
 	class LoginError(Exception):
 		def __str__(self):
-			return 'Login failed: check your login credentials.'
+			return 'Login failed. Check your login credentials.'
 
 	def save_cookies(self):
 		cookiejar = self.session.cookies
@@ -138,26 +138,20 @@ class nhlgc(object):
 		# Error handling.
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
-				try:
-					self.login(self.username, self.password, self.rogers_login)
-					return self.get_games_list(today_only, retry=False)
-				except self.LoginError:
-					pass
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_games_list(today_only, retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text)
 		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
 			if retry == True:
-				try:
-					self.login(self.username, self.password, self.rogers_login)
-					return self.get_games_list(today_only, retry=False)
-				except self.LoginError:
-					pass
-			raise self.LogicError(fn_name, 'access denied.')
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_games_list(today_only, retry=False)
+			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
 			return r_xml['result']['games']['game']
 		except KeyError:
-			raise self.LogicError(fn_name, 'no games found.')
+			raise self.LogicError(fn_name, 'No games found.')
 
 	def get_video_playlists(self, season, game_id, perspective, retry=True):
 		fn_name = 'get_video_playlists'
@@ -177,11 +171,8 @@ class nhlgc(object):
 		# Error handling.
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
-				try:
-					self.login(self.username, self.password, self.rogers_login)
-					return self.get_video_playlists(season, game_id, perspective, retry=False)
-				except self.LoginError:
-					pass
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_video_playlists(season, game_id, perspective, retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text)
 
@@ -199,7 +190,7 @@ class nhlgc(object):
 			else:
 				playlists['0'] = playlist_url
 		except KeyError:
-			raise self.LogicError(fn_name, 'no playlists found.')
+			raise self.LogicError(fn_name, 'No playlists found.')
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
@@ -269,11 +260,8 @@ class nhlgc(object):
 		# Error handling.
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
-				try:
-					self.login(self.username, self.password, self.rogers_login)
-					return self.get_archive_listings(retry=False)
-				except self.LoginError:
-					pass
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_archive_listings(retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text.strip())
 
@@ -289,6 +277,6 @@ class nhlgc(object):
 						season['months'].append(month)
 				archives.append(season)
 		except KeyError:
-			raise self.LogicError(fn_name, 'no archived games found.')
+			raise self.LogicError(fn_name, 'No archived games found.')
 
 		return archives

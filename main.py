@@ -68,9 +68,7 @@ class XBMC_NHL_GameCenter(object):
 		return json.loads(teams_json)
 
 	def display_notification(self, msg):
-		# FIXME: This notification is sort of worthless. Maybe make it a dialog
-		# that needs to be manually dismissed?
-		xbmc.executebuiltin('Notification(%s, %s, %d, %s' % (__addonname__, msg, 5000, __addonicon__))
+		xbmcgui.Dialog().ok(__language__(30035), str(msg))
 
 	def add_folder(self, label, params):
 		xbmcplugin.addDirectoryItem(
@@ -80,7 +78,9 @@ class XBMC_NHL_GameCenter(object):
 			listitem=xbmcgui.ListItem(label, iconImage='DefaultFolder.png')
 		)
 
-	def add_item(self, label, url):
+	def add_item(self, label, url, params=None):
+		if params is not None:
+			url += '?' + urllib.urlencode(params)
 		xbmcplugin.addDirectoryItem(
 			isFolder=False,
 			handle=__addonhandle__,
@@ -157,7 +157,11 @@ class XBMC_NHL_GameCenter(object):
 		return startTimeLocal + ': ' + title
 
 	def MODE_list(self, today_only):
-		retry_args = {'mode': 'live'}
+		retry_args = {'mode': 'list'}
+		if today_only == True:
+			retry_args['type'] = 'today'
+		else:
+			retry_args['type'] = 'recent'
 
 		scoreboard = None
 		try:
@@ -181,7 +185,7 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
-		self.add_folder(__language__(30030), retry_args)
+		self.add_item(__language__(30030), __addonurl__, retry_args)
 
 	def MODE_watch(self, season, game_id):
 		game_id = game_id.zfill(4)
@@ -208,10 +212,10 @@ class XBMC_NHL_GameCenter(object):
 					self.add_item(label, self.game_center.get_authorized_stream_url(playlists[use_bitrate]))
 			except nhlgc.NetworkError as error:
 				self.display_notification(error)
-				self.add_folder(__language__(30030), retry_args)
+				self.add_item(__language__(30030), __addonurl__, retry_args)
 			except nhlgc.LoginError as error:
 				self.display_notification(error)
-				self.add_folder(__language__(30030), retry_args)
+				self.add_item(__language__(30030), __addonurl__, retry_args)
 
 ##
 # Addon menu system.

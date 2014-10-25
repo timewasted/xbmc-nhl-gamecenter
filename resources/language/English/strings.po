@@ -150,3 +150,7 @@ msgstr ""
 msgctxt "#30034"
 msgid "Show scores in games list"
 msgstr ""
+
+msgctxt "#30035"
+msgid "NHL GameCenter"
+msgstr ""
