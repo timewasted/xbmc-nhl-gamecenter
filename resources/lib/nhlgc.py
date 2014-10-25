@@ -22,6 +22,7 @@ class nhlgc(object):
 			'games-list':    'https://gamecenter.nhl.com/nhlgc/servlets/games',
 			'publish-point': 'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
 			'archives-list': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
+			'archives':      'https://gamecenter.nhl.com/nhlgc/servlets/archives',
 			'highlights':    'http://video.nhl.com/videocenter/servlets/playlist',
 		}
 		self.username = username
@@ -280,3 +281,41 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'No archived games found.')
 
 		return archives
+
+	def get_archived_month(self, season, month, retry=True):
+		fn_name = 'get_archived_month'
+
+		params = {
+			'season': season,
+			'month': month,
+			'isFlex': 'true',
+		}
+		try:
+			r = self.session.post(self.urls['archives'], data=params)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			if r.status_code == 401 and retry == True:
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_archived_month(season, month, retry=False)
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		r_xml = xmltodict.parse(r.text.strip())
+
+		try:
+			games = []
+			for game in r_xml['result']['games']['game']:
+				if not 'publishPoint' in game['program']:
+					continue
+				url, qs = game['program']['publishPoint'].split('?', 1)
+				if url[len(url) - 4:] == '.flv':
+					# FIXME: I don't know how to translate these URLs yet.
+					continue
+				# FIXME: This host probably shouldn't be hardcoded.
+				new_url = 'http://nlds150.neulion.com' + url[url.find('/nlds_vod'):] + '.m3u8?' + qs
+				game['program']['publishPoint'] = new_url
+				games.append(game)
+			return games
+		except KeyError:
+			raise self.LogicError(fn_name, 'No archived games found.')
