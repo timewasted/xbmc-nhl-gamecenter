@@ -21,6 +21,7 @@ class nhlgc(object):
 			'console':       'https://gamecenter.nhl.com/nhlgc/servlets/simpleconsole',
 			'games-list':    'https://gamecenter.nhl.com/nhlgc/servlets/games',
 			'publish-point': 'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
+			'archives-list': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
 			'highlights':    'http://video.nhl.com/videocenter/servlets/playlist',
 		}
 		self.username = username
@@ -252,3 +253,42 @@ class nhlgc(object):
 			raise self.NetworkError(fn_name, error)
 
 		return m3u8_url
+
+	def get_archives_list(self, retry=True):
+		fn_name = 'get_archive_listings'
+
+		params = {
+			'date': 'true',
+			'isFlex': 'true',
+		}
+		try:
+			r = self.session.post(self.urls['archives-list'], data=params)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			if r.status_code == 401 and retry == True:
+				try:
+					self.login(self.username, self.password, self.rogers_login)
+					return self.get_archive_listings(retry=False)
+				except self.LoginError:
+					pass
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		r_xml = xmltodict.parse(r.text.strip())
+
+		archives = []
+		try:
+			for archive_season in r_xml['result']['season']:
+				season = {}
+				season['season'] = archive_season['@id']
+				season['months'] = []
+				for date in archive_season['g']:
+					month = date.split('/', 1)[0]
+					if month not in season['months']:
+						season['months'].append(month)
+				archives.append(season)
+		except KeyError:
+			raise self.LogicError(fn_name, 'no archived games found.')
+
+		return archives
