@@ -43,7 +43,7 @@ class XBMC_NHL_GameCenter(object):
 	def __init__(self):
 		username    = __addon__.getSetting('gc_username')
 		password    = __addon__.getSetting('gc_password')
-		rogerslogin = __addon__.getSetting('gc_rogerslogin')
+		rogerslogin = __addon__.getSetting('gc_rogerslogin') == 'true'
 		self.game_center = nhlgc(username, password, rogerslogin, __cookiesfile__)
 
 		self.preferred_bitrate  = int(__addon__.getSetting('preferred_bitrate'))
