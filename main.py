@@ -114,17 +114,22 @@ class XBMC_NHL_GameCenter(object):
 			away_team = away_team[0]
 		home_team_score, away_team_score = None, None
 		game['id'] = game['id'].zfill(4)
-		if game['id'] in scoreboard:
+		if scoreboard is not None and game['id'] in scoreboard:
 			if str(scoreboard[game['id']]['hts']) != '' and str(scoreboard[game['id']]['ats']) != '':
 				home_team_score = str(scoreboard[game['id']]['hts'])
 				away_team_score = str(scoreboard[game['id']]['ats'])
 		if self.team_info_key is not None:
-			home_team = self.team_info[home_team][self.team_info_key]
-			away_team = self.team_info[away_team][self.team_info_key]
+			if home_team in self.team_info:
+				home_team = self.team_info[home_team][self.team_info_key]
+			if away_team in self.team_info:
+				away_team = self.team_info[away_team][self.team_info_key]
 
 		currentTimeUTC = datetime.utcnow().replace(tzinfo=tz.tzutc())
-		startTimeGMT = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
-		startTimeLocal = startTimeGMT.astimezone(tz.tzlocal()).strftime(gameTimeFormat)
+		if 'gameTimeGMT' in game:
+			startTimeGMT = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
+			startTimeLocal = startTimeGMT.astimezone(tz.tzlocal()).strftime(gameTimeFormat)
+		else:
+			startTimeLocal = parser.parse(game['date']).strftime(xbmc.getRegion('dateshort'))
 
 		# Start with the basic title of "Team vs Team".
 		lang_id = 30027
