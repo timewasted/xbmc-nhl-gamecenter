@@ -12,3 +12,6 @@ v0.0.4 (October 25th, 2014)
 
 v0.0.5 (October 26th, 2014)
 - Fix for Rogers login issues
+
+v0.0.6 (October 28th, 2014)
+- Change the user-agent to support high quality streams
