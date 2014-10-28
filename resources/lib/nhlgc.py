@@ -262,9 +262,14 @@ class nhlgc(object):
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
 				self.login(self.username, self.password, self.rogers_login)
-				return self.get_archive_listings(retry=False)
+				return self.get_archives_list(retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text.strip())
+		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
+			if retry == True:
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_archives_list(retry=False)
+			raise self.LogicError(fn_name, 'Access denied.')
 
 		archives = []
 		try:
@@ -285,8 +290,30 @@ class nhlgc(object):
 	def get_archived_month(self, season, month, retry=True):
 		fn_name = 'get_archived_month'
 
+		##
+		# The following are useful data sources:
+		# - http://feeds.cdnak.neulion.com/fs/nhl/mobile/feeds/data/YYYYMMDD.xml
+		# - http://smb.cdnak.neulion.com/fs/nhl/mobile/feed_new/data/streams/YYYY/ipad/02_IIII.json
+		#
+		# - YYYY = year
+		# - MM   = month
+		# - DD   = day
+		# - IIII = zero padded game ID
+		##
+
+		season = int(season)
+		if season <= 2009:
+			# NOTE: The server that hosts the 2009 and earlier seasons doesn't
+			# allow access to the videos (HTTP 403 code). I'm unsure if there
+			# is anything that can be done to fix this.
+			#
+			# Sample URLs:
+			# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2009/2_1_wsh_bos_0910_20091001_FINAL_hd.mp4
+			# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
+			return []
+
 		params = {
-			'season': season,
+			'season': str(season),
 			'month': month,
 			'isFlex': 'true',
 		}
@@ -302,20 +329,34 @@ class nhlgc(object):
 				return self.get_archived_month(season, month, retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text.strip())
+		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
+			if retry == True:
+				self.login(self.username, self.password, self.rogers_login)
+				return self.get_archived_month(season, month, retry=False)
+			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
-			games = []
-			for game in r_xml['result']['games']['game']:
+			if type(r_xml['result']['games']['game']) == type(dict()):
+				r_xml['result']['games']['game'] = [r_xml['result']['games']['game']]
+			for key, game in enumerate(r_xml['result']['games']['game']):
 				if not 'publishPoint' in game['program']:
 					continue
 				url, qs = game['program']['publishPoint'].split('?', 1)
-				if url[len(url) - 4:] == '.flv':
-					# FIXME: I don't know how to translate these URLs yet.
-					continue
-				# FIXME: This host probably shouldn't be hardcoded.
-				new_url = 'http://nlds150.neulion.com' + url[url.find('/nlds_vod'):] + '.m3u8?' + qs
-				game['program']['publishPoint'] = new_url
-				games.append(game)
-			return games
+
+				if season >= 2012:
+					host = 'http://nlds150.cdnak.neulion.com/'
+					base_url = url[url.find('/nlds_vod/') + 1:]
+					new_url = host + base_url + '.m3u8'
+				elif season >= 2010:
+					if season == 2011:
+						host = 'http://nhl.cdn.neulion.net/'
+					else:
+						host = 'http://nhl.cdnllnwnl.neulion.net/'
+					base_url = url[url.find('u/nhlmobile/'):]
+					base_url = base_url.replace('/pc/', '/ced/')
+					base_url = base_url.replace('.mp4', '')
+					new_url = host + base_url + '/v1/playlist.m3u8'
+				r_xml['result']['games']['game'][key]['program']['publishPoint'] = new_url + '?' + qs
+			return r_xml['result']['games']['game']
 		except KeyError:
 			raise self.LogicError(fn_name, 'No archived games found.')
