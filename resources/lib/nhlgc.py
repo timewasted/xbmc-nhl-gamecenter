@@ -193,9 +193,18 @@ class nhlgc(object):
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text)
 
+		try:
+			m3u8_url = r_xml['result']['path'].replace('_ipad', '')
+			return self.get_playlists_from_m3u8_url(m3u8_url, fn_name)
+		except KeyError:
+			raise self.LogicError(fn_name, 'No playlists found.')
+
+	def get_playlists_from_m3u8_url(self, m3u8_url, fn_name=None):
+		if fn_name is None:
+			fn_name = 'get_playlists_from_m3u8_url'
+
 		playlists = {}
 		try:
-			m3u8_url = r_xml['result']['path'].replace('_ipad', '_ced')
 			r = self.session.get(m3u8_url)
 			if r.status_code != 200:
 				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
@@ -203,11 +212,9 @@ class nhlgc(object):
 			if m3u8_obj.is_variant:
 				for playlist in m3u8_obj.playlists:
 					bitrate = str(int(playlist.stream_info.bandwidth) / 1000)
-					playlists[bitrate] = m3u8_url[:m3u8_url.rfind('/') + 1] + playlist.uri + '?' + m3u8_url.split('?')[1]
+					playlists[bitrate] = m3u8_url[:m3u8_url.rfind('/') + 1] + playlist.uri + '?' + m3u8_url.split('?', 1)[1]
 			else:
-				playlists['0'] = playlist_url
-		except KeyError:
-			raise self.LogicError(fn_name, 'No playlists found.')
+				playlists['0'] = m3u8_url
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
