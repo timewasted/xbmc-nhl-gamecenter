@@ -186,7 +186,12 @@ class XBMC_NHL_GameCenter(object):
 					'mode': 'watch',
 					'season': game['season'],
 					'game_id': game['id'].zfill(4),
+					'publish_point_home': None,
+					'publish_point_away': None,
 				}
+				if 'program' in game and 'publishPoint' in game['program']:
+					params['publish_point_home'] = game['program']['publishPoint']['home']
+					params['publish_point_away'] = game['program']['publishPoint']['away']
 				self.add_folder(self.game_title(game, scoreboard), params)
 			return
 		except nhlgc.NetworkError as error:
@@ -197,7 +202,7 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		self.add_item(__language__(30030), __addonurl__, retry_args)
 
-	def MODE_watch(self, season, game_id):
+	def MODE_watch(self, season, game_id, publish_point):
 		game_id = game_id.zfill(4)
 		retry_args = {
 			'mode': 'watch',
@@ -205,19 +210,23 @@ class XBMC_NHL_GameCenter(object):
 			'game_id': game_id,
 		}
 		perspectives = [
-			(__language__(30025), '2'), # Home stream
-			(__language__(30026), '4'), # Away stream
+			(__language__(30025), 'home', '2'), # Home stream
+			(__language__(30026), 'away', '4'), # Away stream
 		]
 
 		use_bitrate = None
-		for label, perspective in perspectives:
+		for label, pub_point_key, perspective in perspectives:
 			try:
-				playlists = self.game_center.get_video_playlists(season, game_id, perspective)
+				if publish_point[pub_point_key] is not None:
+					playlists = self.game_center.get_playlists_from_m3u8_url(publish_point[pub_point_key])
+				else:
+					playlists = self.game_center.get_video_playlists(season, game_id, perspective)
+
 				if len(playlists) == 1:
 					stream = playlists.values()[0]
 					self.add_item(label, self.game_center.get_authorized_stream_url(stream))
 				else:
-					if use_bitrate is None:
+					if use_bitrate is None or use_bitrate not in playlists:
 						use_bitrate = self.select_bitrate(playlists)
 					self.add_item(label, self.game_center.get_authorized_stream_url(playlists[use_bitrate]))
 			except nhlgc.NetworkError as error:
@@ -242,6 +251,10 @@ elif mode[0] == 'list':
 elif mode[0] == 'watch':
 	season      = __addonargs__.get('season')[0]
 	game_id     = __addonargs__.get('game_id')[0]
-	game_center.MODE_watch(season, game_id)
+	pub_point   = {
+		'home': __addonargs__.get('publish_point_home')[0],
+		'away': __addonargs__.get('publish_point_away')[0],
+	}
+	game_center.MODE_watch(season, game_id, pub_point)
 
 xbmcplugin.endOfDirectory(__addonhandle__)
