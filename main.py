@@ -106,24 +106,29 @@ class XBMC_NHL_GameCenter(object):
 		return sorted_streams[ret]
 
 	def game_title(self, game, scoreboard):
+		# Get the team names.
 		home_team = game['homeTeam']
-		if type(home_team) == type(list()):
-			home_team = home_team[0]
 		away_team = game['awayTeam']
-		if type(away_team) == type(list()):
-			away_team = away_team[0]
-		home_team_score, away_team_score = None, None
-		game['id'] = game['id'].zfill(4)
-		if scoreboard is not None and game['id'] in scoreboard:
-			if str(scoreboard[game['id']]['hts']) != '' and str(scoreboard[game['id']]['ats']) != '':
-				home_team_score = str(scoreboard[game['id']]['hts'])
-				away_team_score = str(scoreboard[game['id']]['ats'])
 		if self.team_info_key is not None:
 			if home_team in self.team_info:
 				home_team = self.team_info[home_team][self.team_info_key]
 			if away_team in self.team_info:
 				away_team = self.team_info[away_team][self.team_info_key]
 
+		# Get the score for the game.
+		home_team_score, away_team_score = None, None
+		game['id'] = game['id'].zfill(4)
+		# First check the game info itself.
+		if 'awayGoals' in game and 'homeGoals' in game:
+			home_team_score = game['homeGoals']
+			away_team_score = game['awayGoals']
+		# Fall back to checking the scoreboard.
+		elif scoreboard is not None and game['id'] in scoreboard:
+			if str(scoreboard[game['id']]['hts']) != '' and str(scoreboard[game['id']]['ats']) != '':
+				home_team_score = str(scoreboard[game['id']]['hts'])
+				away_team_score = str(scoreboard[game['id']]['ats'])
+
+		# Get the required dates and times.
 		currentTimeUTC = datetime.utcnow().replace(tzinfo=tz.tzutc())
 		if 'gameTimeGMT' in game:
 			startTimeGMT = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
