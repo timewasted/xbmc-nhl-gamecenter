@@ -36,9 +36,7 @@ class nhlgc(object):
 			pass
 		self.session = requests.Session()
 		self.session.cookies = cookiejar
-		self.session.headers.update({
-			'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/38.0.2125.104 Safari/537.36',
-		})
+		self.session.headers.update({'User-Agent': 'iPad'})
 
 		# NOTE: The following is required to get a semi-valid RFC3339 timestamp.
 		try:
@@ -181,9 +179,7 @@ class nhlgc(object):
 
 		playlists = {}
 		try:
-			m3u8_url = r_xml['result']['path']
-			m3u8_url = m3u8_url.replace('adaptive://', 'http://')
-			m3u8_url = m3u8_url.replace('_pc.mp4', '.mp4.m3u8')
+			m3u8_url = r_xml['result']['path'].replace('_ipad', '_ced')
 			r = self.session.get(m3u8_url)
 			if r.status_code != 200:
 				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
