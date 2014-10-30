@@ -150,6 +150,22 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
+			for key, game in enumerate(r_xml['result']['games']['game']):
+				# Sanitize homeTeam and awayTeam.
+				if type(game['homeTeam']) == type(list()):
+					r_xml['result']['games']['game'][key]['homeTeam'] = game['homeTeam'][0]
+				if type(game['awayTeam']) == type(list()):
+					r_xml['result']['games']['game'][key]['awayTeam'] = game['awayTeam'][0]
+
+				# Sanitize publishPoint.
+				if 'program' in game and 'publishPoint' in game['program']:
+					pub_point = game['program']['publishPoint']
+					pub_point = pub_point.replace('adaptive://', 'http://')
+					pub_point = pub_point.replace('_pc.mp4', '.mp4.m3u8')
+					r_xml['result']['games']['game'][key]['program']['publishPoint'] = {
+						'home': pub_point,
+						'away': pub_point.replace('_h_', '_a_'),
+					}
 			return r_xml['result']['games']['game']
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
