@@ -255,6 +255,10 @@ elif mode[0] == 'watch':
 		'home': __addonargs__.get('publish_point_home')[0],
 		'away': __addonargs__.get('publish_point_away')[0],
 	}
+	if pub_point['home'] == 'None':
+		pub_point['home'] = None
+	if pub_point['away'] == 'None':
+		pub_point['away'] = None
 	game_center.MODE_watch(season, game_id, pub_point)
 
 xbmcplugin.endOfDirectory(__addonhandle__)
