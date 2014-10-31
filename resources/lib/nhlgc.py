@@ -12,6 +12,7 @@ except ImportError:
 from datetime import date
 
 class nhlgc(object):
+	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
 	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
 
 	def __init__(self, username, password, rogers_login, cookies_file):
@@ -36,7 +37,7 @@ class nhlgc(object):
 			pass
 		self.session = requests.Session()
 		self.session.cookies = cookiejar
-		self.session.headers.update({'User-Agent': 'iPad'})
+		self.session.headers.update({'User-Agent': self.DEFAULT_USER_AGENT})
 
 		# NOTE: The following is required to get a semi-valid RFC3339 timestamp.
 		try:
@@ -262,10 +263,14 @@ class nhlgc(object):
 				r = requests.get(m3u8_obj.key.uri, cookies=r.cookies)
 				if r.status_code != 200:
 					raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-				use_cookies = r.cookies
-				use_cookies['nlqptid'] = m3u8_url.split('?', 1)[1]
-				enc_cookies = urllib.urlencode(use_cookies)
-				m3u8_url += '&' + enc_cookies + '|Cookie=' + enc_cookies
+				headers = {
+					'Cookie': '',
+					'User-Agent': self.DEFAULT_USER_AGENT,
+				}
+				for cookie in r.cookies:
+					headers['Cookie'] += '%s=%s; ' % (cookie.name, cookie.value)
+				headers['Cookie'] += 'nlqptid=' + m3u8_url.split('?', 1)[1]
+				m3u8_url += '|' + urllib.urlencode(headers)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
