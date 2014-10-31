@@ -208,6 +208,8 @@ class XBMC_NHL_GameCenter(object):
 			'mode': 'watch',
 			'season': season,
 			'game_id': game_id,
+			'publish_point_home': publish_point['home'],
+			'publish_point_away': publish_point['away'],
 		}
 		perspectives = [
 			(__language__(30025), 'home', '2'), # Home stream
