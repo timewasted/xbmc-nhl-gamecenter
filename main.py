@@ -235,8 +235,9 @@ class XBMC_NHL_GameCenter(object):
 					self.add_item(label, self.game_center.get_authorized_stream_url(stream_url))
 					seen_urls[stream_url] = True
 			except nhlgc.NetworkError as error:
-				self.display_notification(error)
-				self.add_item(__language__(30030), __addonurl__, retry_args)
+				if error.status_code != 404:
+					self.display_notification(error)
+					self.add_item(__language__(30030), __addonurl__, retry_args)
 			except nhlgc.LoginError as error:
 				self.display_notification(error)
 				self.add_item(__language__(30030), __addonurl__, retry_args)
