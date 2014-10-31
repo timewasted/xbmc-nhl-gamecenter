@@ -25,3 +25,6 @@ v0.0.8 (October 30th, 2014)
 
 v0.0.9 (October 30th, 2014)
 - Fix live streaming issues (for real, this time)
+
+v0.0.10 (October 31st, 2014)
+- Add support for archived games (2010 and later seasons)
