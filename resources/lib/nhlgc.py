@@ -17,14 +17,14 @@ class nhlgc(object):
 
 	def __init__(self, username, password, rogers_login, cookies_file):
 		self.urls = {
-			'scoreboard':    'http://live.nhle.com/GameData/GCScoreboard/',
-			'login':         'https://gamecenter.nhl.com/nhlgc/secure/login',
-			'console':       'https://gamecenter.nhl.com/nhlgc/servlets/simpleconsole',
-			'games-list':    'https://gamecenter.nhl.com/nhlgc/servlets/games',
-			'publish-point': 'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
-			'archives-list': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
-			'archives':      'https://gamecenter.nhl.com/nhlgc/servlets/archives',
-			'highlights':    'http://video.nhl.com/videocenter/servlets/playlist',
+			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
+			'login':            'https://gamecenter.nhl.com/nhlgc/secure/login',
+			'console':          'https://gamecenter.nhl.com/nhlgc/servlets/simpleconsole',
+			'games-list':       'https://gamecenter.nhl.com/nhlgc/servlets/games',
+			'publish-point':    'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
+			'archived-seasons': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
+			'archives':         'https://gamecenter.nhl.com/nhlgc/servlets/archives',
+			'highlights':       'http://video.nhl.com/videocenter/servlets/playlist',
 		}
 		self.username = username
 		self.password = password
@@ -276,15 +276,15 @@ class nhlgc(object):
 
 		return m3u8_url
 
-	def get_archives_list(self, retry=True):
-		fn_name = 'get_archive_listings'
+	def get_archived_seasons(self, retry=True):
+		fn_name = 'get_archived_seasons'
 
 		params = {
 			'date': 'true',
 			'isFlex': 'true',
 		}
 		try:
-			r = self.session.post(self.urls['archives-list'], data=params)
+			r = self.session.post(self.urls['archived-seasons'], data=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
@@ -292,13 +292,13 @@ class nhlgc(object):
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
 				self.login(self.username, self.password, self.rogers_login)
-				return self.get_archives_list(retry=False)
+				return self.get_archived_seasons(retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text.strip())
 		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
 			if retry == True:
 				self.login(self.username, self.password, self.rogers_login)
-				return self.get_archives_list(retry=False)
+				return self.get_archived_seasons(retry=False)
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		archives = []
@@ -315,7 +315,7 @@ class nhlgc(object):
 		except KeyError:
 			raise self.LogicError(fn_name, 'No archived games found.')
 
-		return archives
+		return sorted(archives, key=lambda seasons: seasons['season'], reverse=True)
 
 	def get_archived_month(self, season, month, retry=True):
 		fn_name = 'get_archived_month'
@@ -386,7 +386,10 @@ class nhlgc(object):
 					base_url = base_url.replace('/pc/', '/ced/')
 					base_url = base_url.replace('.mp4', '')
 					new_url = host + base_url + '/v1/playlist.m3u8'
-				r_xml['result']['games']['game'][key]['program']['publishPoint'] = new_url + '?' + qs
+				r_xml['result']['games']['game'][key]['program']['publishPoint'] = {
+					'home': new_url + '?' + qs,
+					'away': new_url.replace('_h_', '_a_') + '?' + qs,
+				}
 			return r_xml['result']['games']['game']
 		except KeyError:
 			raise self.LogicError(fn_name, 'No archived games found.')
