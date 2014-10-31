@@ -216,6 +216,7 @@ class XBMC_NHL_GameCenter(object):
 			(__language__(30026), 'away', '4'), # Away stream
 		]
 
+		seen_urls = {}
 		use_bitrate = None
 		for label, pub_point_key, perspective in perspectives:
 			try:
@@ -225,12 +226,14 @@ class XBMC_NHL_GameCenter(object):
 					playlists = self.game_center.get_video_playlists(season, game_id, perspective)
 
 				if len(playlists) == 1:
-					stream = playlists.values()[0]
-					self.add_item(label, self.game_center.get_authorized_stream_url(stream))
+					stream_url = playlists.values()[0]
 				else:
 					if use_bitrate is None or use_bitrate not in playlists:
 						use_bitrate = self.select_bitrate(playlists)
-					self.add_item(label, self.game_center.get_authorized_stream_url(playlists[use_bitrate]))
+					stream_url = playlists[use_bitrate]
+				if stream_url not in seen_urls:
+					self.add_item(label, self.game_center.get_authorized_stream_url(stream_url))
+					seen_urls[stream_url] = True
 			except nhlgc.NetworkError as error:
 				self.display_notification(error)
 				self.add_item(__language__(30030), __addonurl__, retry_args)
