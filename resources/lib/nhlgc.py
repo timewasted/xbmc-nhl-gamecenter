@@ -262,7 +262,9 @@ class nhlgc(object):
 				r = requests.get(m3u8_obj.key.uri, cookies=r.cookies)
 				if r.status_code != 200:
 					raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-				enc_cookies = urllib.urlencode(r.cookies)
+				use_cookies = r.cookies
+				use_cookies['nlqptid'] = m3u8_url.split('?', 1)[1]
+				enc_cookies = urllib.urlencode(use_cookies)
 				m3u8_url += '&' + enc_cookies + '|Cookie=' + enc_cookies
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
