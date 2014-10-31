@@ -154,3 +154,55 @@ msgstr ""
 msgctxt "#30035"
 msgid "NHL GameCenter"
 msgstr ""
+
+msgctxt "#30036"
+msgid "Archived games"
+msgstr ""
+
+msgctxt "#30037"
+msgid "January"
+msgstr ""
+
+msgctxt "#30038"
+msgid "February"
+msgstr ""
+
+msgctxt "#30039"
+msgid "March"
+msgstr ""
+
+msgctxt "#30040"
+msgid "April"
+msgstr ""
+
+msgctxt "#30041"
+msgid "May"
+msgstr ""
+
+msgctxt "#30042"
+msgid "June"
+msgstr ""
+
+msgctxt "#30043"
+msgid "July"
+msgstr ""
+
+msgctxt "#30044"
+msgid "August"
+msgstr ""
+
+msgctxt "#30045"
+msgid "September"
+msgstr ""
+
+msgctxt "#30046"
+msgid "October"
+msgstr ""
+
+msgctxt "#30047"
+msgid "November"
+msgstr ""
+
+msgctxt "#30048"
+msgid "December"
+msgstr ""

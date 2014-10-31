@@ -236,6 +236,69 @@ class XBMC_NHL_GameCenter(object):
 				self.display_notification(error)
 				self.add_item(__language__(30030), __addonurl__, retry_args)
 
+	def MODE_archives(self, season):
+		retry_args = {
+			'mode': 'archives',
+			'season': season,
+		}
+
+		try:
+			archives = self.game_center.get_archived_seasons()
+			if season is None:
+				for archive in archives:
+					title = '%d - %d' % (int(archive['season']), int(archive['season']) + 1)
+					self.add_folder(title, {
+						'mode': 'archives',
+						'season': archive['season'],
+					})
+			else:
+				title = '%d - %d: ' % (int(season), int(season) + 1)
+				for archive in archives:
+					if archive['season'] != season:
+						continue
+					for month in archive['months']:
+						self.add_folder(title + __language__(30037 + int(month) - 1), {
+							'mode': 'archives_month',
+							'season': season,
+							'month': month,
+						})
+			return
+		except nhlgc.NetworkError as error:
+			self.display_notification(error)
+		except nhlgc.LoginError as error:
+			self.display_notification(error)
+		except nhlgc.LogicError as error:
+			self.display_notification(error)
+		self.add_item(__language__(30030), __addonurl__, retry_args)
+
+	def MODE_archives_month(self, season, month):
+		retry_args = {
+			'mode': 'archives_month',
+			'season': season,
+			'month': month,
+		}
+
+		try:
+			games = self.game_center.get_archived_month(season, month)
+			for game in games:
+				if not 'publishPoint' in game['program']:
+					continue
+				self.add_folder(self.game_title(game, None), {
+					'mode': 'watch',
+					'season': season,
+					'game_id': game['id'].zfill(4),
+					'publish_point_home': game['program']['publishPoint']['home'],
+					'publish_point_away': game['program']['publishPoint']['away'],
+				})
+			return
+		except nhlgc.NetworkError as error:
+			self.display_notification(error)
+		except nhlgc.LoginError as error:
+			self.display_notification(error)
+		except nhlgc.LogicError as error:
+			self.display_notification(error)
+		self.add_item(__language__(30030), __addonurl__, retry_args)
+
 ##
 # Addon menu system.
 ##
@@ -245,6 +308,7 @@ mode = __addonargs__.get('mode', None)
 if mode is None:
 	game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
 	game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
+	game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
 elif mode[0] == 'list':
 	today_only = __addonargs__.get('type')[0] == 'today'
 	game_center.MODE_list(today_only)
@@ -260,5 +324,14 @@ elif mode[0] == 'watch':
 	if pub_point['away'] == 'None':
 		pub_point['away'] = None
 	game_center.MODE_watch(season, game_id, pub_point)
+elif mode[0] == 'archives':
+	season = __addonargs__.get('season')[0]
+	if season == 'None':
+		season = None
+	game_center.MODE_archives(season)
+elif mode[0] == 'archives_month':
+	season = __addonargs__.get('season')[0]
+	month  = __addonargs__.get('month')[0]
+	game_center.MODE_archives_month(season, month)
 
 xbmcplugin.endOfDirectory(__addonhandle__)
