@@ -18,3 +18,7 @@ v0.0.6 (October 28th, 2014)
 
 v0.0.7 (October 30th, 2014)
 - Revert the changes made in v0.0.6, since they did more harm than good.
+
+v0.0.8 (October 30th, 2014)
+- Fix live streaming issues
+- Various tweaks to allow for higher quality streams when watching recent games
