@@ -1,30 +1,30 @@
-v0.0.1 (October 24th, 2014)
-- Initial release.
+v0.0.10 (October 31st, 2014)
+- Add support for archived games (2010 and later seasons)
 
-v0.0.2 (October 24th, 2014)
-- Fixed score display errors in the games list
-
-v0.0.3 (October 24th, 2014)
-- Fixed an error when "Display team name as" was set to "city"
-
-v0.0.4 (October 25th, 2014)
-- Clean up error handling and recovery
-
-v0.0.5 (October 26th, 2014)
-- Fix for Rogers login issues
-
-v0.0.6 (October 28th, 2014)
-- Change the user-agent to support high quality streams
-
-v0.0.7 (October 30th, 2014)
-- Revert the changes made in v0.0.6, since they did more harm than good.
+v0.0.9 (October 30th, 2014)
+- Fix live streaming issues (for real, this time)
 
 v0.0.8 (October 30th, 2014)
 - Fix live streaming issues
 - Various tweaks to allow for higher quality streams when watching recent games
 
-v0.0.9 (October 30th, 2014)
-- Fix live streaming issues (for real, this time)
+v0.0.7 (October 30th, 2014)
+- Revert the changes made in v0.0.6, since they did more harm than good.
 
-v0.0.10 (October 31st, 2014)
-- Add support for archived games (2010 and later seasons)
+v0.0.6 (October 28th, 2014)
+- Change the user-agent to support high quality streams
+
+v0.0.5 (October 26th, 2014)
+- Fix for Rogers login issues
+
+v0.0.4 (October 25th, 2014)
+- Clean up error handling and recovery
+
+v0.0.3 (October 24th, 2014)
+- Fixed an error when "Display team name as" was set to "city"
+
+v0.0.2 (October 24th, 2014)
+- Fixed score display errors in the games list
+
+v0.0.1 (October 24th, 2014)
+- Initial release.
