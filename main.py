@@ -44,7 +44,29 @@ class XBMC_NHL_GameCenter(object):
 		username    = __addon__.getSetting('gc_username')
 		password    = __addon__.getSetting('gc_password')
 		rogerslogin = __addon__.getSetting('gc_rogerslogin') == 'true'
-		self.game_center = nhlgc(username, password, rogerslogin, __cookiesfile__)
+
+		proxy_config = None
+		if __addon__.getSetting('proxy_enabled') == 'true':
+			proxy_config = {
+				'scheme': __addon__.getSetting('proxy_scheme'),
+				'host': __addon__.getSetting('proxy_host'),
+				'port': __addon__.getSetting('proxy_port'),
+				'auth': {
+					'username': __addon__.getSetting('proxy_username'),
+					'password': __addon__.getSetting('proxy_password'),
+				},
+			}
+			if proxy_config['auth']['username'] == '' and proxy_config['auth']['password'] == '':
+				proxy_config['auth'] = None
+
+		try:
+			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, __cookiesfile__)
+		except nhlgc.LogicError as error:
+			self.display_notification(error)
+			raise RuntimeError(error)
+		except nhlgc.NetworkError as error:
+			self.display_notification(error)
+			raise RuntimeError(error)
 
 		self.preferred_bitrate  = int(__addon__.getSetting('preferred_bitrate'))
 		self.always_ask_bitrate = self.preferred_bitrate == 0
@@ -309,35 +331,38 @@ class XBMC_NHL_GameCenter(object):
 # Addon menu system.
 ##
 
-game_center = XBMC_NHL_GameCenter()
-mode = __addonargs__.get('mode', None)
-if mode is None:
-	game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
-	game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
-	game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
-elif mode[0] == 'list':
-	today_only = __addonargs__.get('type')[0] == 'today'
-	game_center.MODE_list(today_only)
-elif mode[0] == 'watch':
-	season      = __addonargs__.get('season')[0]
-	game_id     = __addonargs__.get('game_id')[0]
-	pub_point   = {
-		'home': __addonargs__.get('publish_point_home')[0],
-		'away': __addonargs__.get('publish_point_away')[0],
-	}
-	if pub_point['home'] == 'None':
-		pub_point['home'] = None
-	if pub_point['away'] == 'None':
-		pub_point['away'] = None
-	game_center.MODE_watch(season, game_id, pub_point)
-elif mode[0] == 'archives':
-	season = __addonargs__.get('season')[0]
-	if season == 'None':
-		season = None
-	game_center.MODE_archives(season)
-elif mode[0] == 'archives_month':
-	season = __addonargs__.get('season')[0]
-	month  = __addonargs__.get('month')[0]
-	game_center.MODE_archives_month(season, month)
+try:
+	game_center = XBMC_NHL_GameCenter()
+	mode = __addonargs__.get('mode', None)
+	if mode is None:
+		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
+		game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
+		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
+	elif mode[0] == 'list':
+		today_only = __addonargs__.get('type')[0] == 'today'
+		game_center.MODE_list(today_only)
+	elif mode[0] == 'watch':
+		season      = __addonargs__.get('season')[0]
+		game_id     = __addonargs__.get('game_id')[0]
+		pub_point   = {
+			'home': __addonargs__.get('publish_point_home')[0],
+			'away': __addonargs__.get('publish_point_away')[0],
+		}
+		if pub_point['home'] == 'None':
+			pub_point['home'] = None
+		if pub_point['away'] == 'None':
+			pub_point['away'] = None
+		game_center.MODE_watch(season, game_id, pub_point)
+	elif mode[0] == 'archives':
+		season = __addonargs__.get('season')[0]
+		if season == 'None':
+			season = None
+		game_center.MODE_archives(season)
+	elif mode[0] == 'archives_month':
+		season = __addonargs__.get('season')[0]
+		month  = __addonargs__.get('month')[0]
+		game_center.MODE_archives_month(season, month)
+except RuntimeError:
+	pass
 
 xbmcplugin.endOfDirectory(__addonhandle__)

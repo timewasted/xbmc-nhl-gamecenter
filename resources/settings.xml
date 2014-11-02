@@ -15,4 +15,15 @@
 		<setting id="at_instead_of_vs" type="bool" label="30033" default="false"/>
 		<setting id="show_scores" type="bool" label="30034" default="false"/>
 	</category>
+
+	<!-- Proxy Settings -->
+	<category label="30049">
+		<setting id="proxy_enabled" type="bool" label="30050" default="false"/>
+		<setting id="proxy_scheme" type="select" label="30051" lvalues="30056|30057" default="http" enable="eq(-1,true)"/>
+		<setting id="proxy_host" type="text" label="30052" default="" enable="eq(-2,true)"/>
+		<setting id="proxy_port" type="number" label="30053" default="" enable="eq(-3,true)"/>
+		<setting type="lsep" label="30058"/>
+		<setting id="proxy_username" type="text" label="30054" default="" enable="eq(-5,true)"/>
+		<setting id="proxy_password" type="text" label="30055" default="" option="hidden" enable="eq(-6,true)"/>
+	</category>
 </settings>

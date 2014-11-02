@@ -1,3 +1,7 @@
+v0.0.11 (November 1st, 2014)
+- Add support for HTTP/HTTPS proxies
+- Only the following authentication schemes are currently supported: None and Basic
+
 v0.0.10 (October 31st, 2014)
 - Add support for archived games (2010 and later seasons)
 

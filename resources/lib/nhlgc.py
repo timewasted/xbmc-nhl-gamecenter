@@ -15,7 +15,7 @@ class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
 	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
 
-	def __init__(self, username, password, rogers_login, cookies_file):
+	def __init__(self, username, password, rogers_login, proxy_config, cookies_file):
 		self.urls = {
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
 			'login':            'https://gamecenter.nhl.com/nhlgc/secure/login',
@@ -39,11 +39,20 @@ class nhlgc(object):
 		self.session.cookies = cookiejar
 		self.session.headers.update({'User-Agent': self.DEFAULT_USER_AGENT})
 
+		if proxy_config is not None:
+			proxy_url = self.build_proxy_url(proxy_config)
+			self.session.proxies = {
+				'http': proxy_url,
+				'https': proxy_url,
+			}
+
 		# NOTE: The following is required to get a semi-valid RFC3339 timestamp.
 		try:
 			self.session.post(self.urls['console'], data={'isFlex': 'true'})
+		except requests.exceptions.ProxyError as error:
+			raise self.LogicError('__init__', '%s[CR]%s' % (str(error[0][0]), str(error[0][1])))
 		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError('__init__', error)
+			raise self.NetworkError('__init__', str(error))
 		self.save_cookies()
 
 	class LogicError(Exception):
@@ -66,6 +75,42 @@ class nhlgc(object):
 	class LoginError(Exception):
 		def __str__(self):
 			return 'Login failed. Check your login credentials.'
+
+	def build_proxy_url(self, config):
+		fn_name = 'build_proxy_url'
+
+		proxy_url = ''
+
+		if 'scheme' in config:
+			scheme = config['scheme'].lower().strip()
+			if scheme != 'http' and scheme != 'https':
+				raise self.LogicError(fn_name, 'Unsupported scheme "%s".' % scheme)
+			proxy_url += scheme + '://'
+
+		if 'auth' in config and config['auth'] is not None:
+			try:
+				username = config['auth']['username']
+				password = config['auth']['password']
+				if username == '' or password == '':
+					raise self.LogicError(fn_name, 'Auth does not contain a valid username and/or password.')
+				proxy_url += '%s:%s@' % (urllib.quote(username), urllib.quote(password))
+			except KeyError:
+				raise self.LogicError(fn_name, 'Auth does not contain a valid username and/or password.')
+
+		if 'host' not in config or config['host'].strip() == '':
+			raise self.LogicError(fn_name, 'Host is not valid.')
+		proxy_url += config['host'].strip()
+
+		if 'port' in config:
+			try:
+				port = int(config['port'])
+				if port <= 0 or port > 65535:
+					raise self.LogicError(fn_name, 'Port must be a number between 1 and 65535.')
+				proxy_url += ':' + str(port)
+			except ValueError:
+				raise self.LogicError(fn_name, 'Port must be a number between 1 and 65535.')
+
+		return proxy_url
 
 	def save_cookies(self):
 		cookiejar = self.session.cookies
