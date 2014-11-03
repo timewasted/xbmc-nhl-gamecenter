@@ -196,6 +196,8 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
+			if type(r_xml['result']['games']['game']) == type(dict()):
+				r_xml['result']['games']['game'] = [r_xml['result']['games']['game']]
 			for key, game in enumerate(r_xml['result']['games']['game']):
 				# Sanitize homeTeam and awayTeam.
 				if type(game['homeTeam']) == type(list()):
