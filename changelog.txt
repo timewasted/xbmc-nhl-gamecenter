@@ -1,3 +1,7 @@
+v0.0.13 (November 3rd, 2014)
+- Name "Live games" to "Today's games"
+- Add support for watching condensed games as well as game highlights
+
 v0.0.12 (November 3rd, 2014)
 - Fix for when there's only a single live game for the night
 
