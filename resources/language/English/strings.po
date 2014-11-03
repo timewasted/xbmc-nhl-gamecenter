@@ -112,11 +112,11 @@ msgid "(Ended)"
 msgstr ""
 
 msgctxt "#30025"
-msgid "Home stream"
+msgid "Full game (home stream)"
 msgstr ""
 
 msgctxt "#30026"
-msgid "Away stream"
+msgid "Full game (away stream)"
 msgstr ""
 
 msgctxt "#30027"
