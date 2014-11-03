@@ -128,7 +128,7 @@ msgid " at "
 msgstr ""
 
 msgctxt "#30029"
-msgid "Live games"
+msgid "Today's games"
 msgstr ""
 
 msgctxt "#30030"
