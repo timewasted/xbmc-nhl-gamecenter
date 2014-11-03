@@ -15,6 +15,13 @@ class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
 	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
 
+	PERSPECTIVE_HOME = '2'
+	PERSPECTIVE_AWAY = '4'
+
+	PRESEASON  = '01'
+	REGSEASON  = '02'
+	POSTSEASON = '03'
+
 	def __init__(self, username, password, rogers_login, proxy_config, cookies_file):
 		self.urls = {
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
@@ -225,7 +232,8 @@ class nhlgc(object):
 			'type': 'game',
 			'gs': 'live',
 			'ft': perspective,
-			'id': season + "02" + game_id.zfill(4),
+			# FIXME: self.REGSEASON shouldn't be hardcoded.
+			'id': season + self.REGSEASON + game_id.zfill(4),
 			'plid': binascii.hexlify(os.urandom(16)),
 		}
 		try:
@@ -271,7 +279,8 @@ class nhlgc(object):
 	def get_game_highlights(self, season, game_id):
 		fn_name = 'get_game_highlights'
 
-		base_id = season + '02' + game_id.zfill(4)
+		# FIXME: self.REGSEASON shouldn't be hardcoded.
+		base_id = season + self.REGSEASON + game_id.zfill(4)
 		home_suffix, away_suffix = '-X-h', '-X-a'
 		params = {
 			'format': 'json',
