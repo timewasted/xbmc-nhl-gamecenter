@@ -225,12 +225,12 @@ class nhlgc(object):
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
 
-	def get_video_playlists(self, season, game_id, perspective, retry=True):
+	def get_video_playlists(self, season, game_id, stream_type, perspective, retry=True):
 		fn_name = 'get_video_playlists'
 
 		params = {
 			'type': 'game',
-			'gs': 'live',
+			'gs': stream_type,
 			'ft': perspective,
 			# FIXME: self.REGSEASON shouldn't be hardcoded.
 			'id': season + self.REGSEASON + game_id.zfill(4),

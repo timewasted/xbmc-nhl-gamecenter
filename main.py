@@ -233,19 +233,30 @@ class XBMC_NHL_GameCenter(object):
 			'publish_point_home': publish_point['home'],
 			'publish_point_away': publish_point['away'],
 		}
-		perspectives = [
-			(__language__(30025), 'home', '2'), # Home stream
-			(__language__(30026), 'away', '4'), # Away stream
+		view_options = [
+			(__language__(30025), 'home', 'live', self.game_center.PERSPECTIVE_HOME),
+			(__language__(30026), 'away', 'live', self.game_center.PERSPECTIVE_AWAY),
+			(__language__(30059), None, 'condensed', self.game_center.PERSPECTIVE_HOME),
+			(__language__(30060), None, 'condensed', self.game_center.PERSPECTIVE_AWAY),
+			(None, None, 'highlights', None),
 		]
 
 		seen_urls = {}
 		use_bitrate = None
-		for label, pub_point_key, perspective in perspectives:
+		for label, pub_point_key, stream_type, perspective in view_options:
 			try:
-				if publish_point[pub_point_key] is not None:
+				if stream_type == 'highlights':
+					highlights = self.game_center.get_game_highlights(season, game_id)
+					if 'home' in highlights and 'publishPoint' in highlights['home']:
+						self.add_item(__language__(30061), highlights['home']['publishPoint'])
+					if 'away' in highlights and 'publishPoint' in highlights['away']:
+						self.add_item(__language__(30062), highlights['away']['publishPoint'])
+					continue
+
+				if pub_point_key is not None and publish_point[pub_point_key] is not None:
 					playlists = self.game_center.get_playlists_from_m3u8_url(publish_point[pub_point_key])
 				else:
-					playlists = self.game_center.get_video_playlists(season, game_id, perspective)
+					playlists = self.game_center.get_video_playlists(season, game_id, stream_type, perspective)
 
 				if len(playlists) == 1:
 					stream_url = playlists.values()[0]

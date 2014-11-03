@@ -246,3 +246,19 @@ msgstr ""
 msgctxt "#30058"
 msgid "Only the following authentication schemes are supported: None and Basic"
 msgstr ""
+
+msgctxt "#30059"
+msgid "Condensed game (home stream)"
+msgstr ""
+
+msgctxt "#30060"
+msgid "Condensed game (away stream)"
+msgstr ""
+
+msgctxt "#30061"
+msgid "Game highlights (home stream)"
+msgstr ""
+
+msgctxt "#30062"
+msgid "Game highlights (away stream)"
+msgstr ""
