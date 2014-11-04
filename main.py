@@ -24,6 +24,10 @@ __cookiesfile__ = xbmc.translatePath(os.path.join(__profile__, 'cookies.lwp'))
 gameTimeFormat  = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
 
 class XBMC_NHL_GameCenter(object):
+	STREAM_TYPE_LIVE       = 'live'
+	STREAM_TYPE_CONDENSED  = 'condensed'
+	STREAM_TYPE_HIGHLIGHTS = 'highlights'
+
 	# This is the list of bitrates defined in settings.xml. These two sources
 	# should be kept in sync!
 	SETTINGS_BITRATES = [
@@ -205,7 +209,7 @@ class XBMC_NHL_GameCenter(object):
 			games = self.game_center.get_games_list(today_only)
 			for game in games:
 				params = {
-					'mode': 'watch',
+					'mode': 'view_options',
 					'season': game['season'],
 					'game_id': game['id'].zfill(4),
 					'publish_point_home': None,
@@ -217,6 +221,9 @@ class XBMC_NHL_GameCenter(object):
 					params['publish_point_away'] = game['program']['publishPoint']['away']
 				if 'gameEndTimeGMT' in game:
 					params['game_ended'] = True
+				else:
+					params['mode'] = 'watch'
+					params['stream_type'] = self.STREAM_TYPE_LIVE
 				self.add_folder(self.game_title(game, scoreboard), params)
 			return
 		except nhlgc.NetworkError as error:
@@ -227,39 +234,55 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		self.add_item(__language__(30030), __addonurl__, retry_args)
 
-	def MODE_watch(self, season, game_id, publish_point, game_ended):
+	def MODE_view_options(self, season, game_id, publish_point, game_ended):
+		game_id = game_id.zfill(4)
+		view_options = [
+			(__language__(30059), self.STREAM_TYPE_LIVE),
+		]
+		if game_ended == True:
+			view_options += [
+				(__language__(30060), self.STREAM_TYPE_CONDENSED),
+				(__language__(30061), self.STREAM_TYPE_HIGHLIGHTS),
+			]
+		for label, stream_type in view_options:
+			self.add_folder(label, {
+				'mode': 'watch',
+				'season': season,
+				'game_id': game_id,
+				'stream_type': stream_type,
+				'publish_point_home': publish_point['home'],
+				'publish_point_away': publish_point['away'],
+			})
+
+	def MODE_watch(self, season, game_id, stream_type, publish_point):
 		game_id = game_id.zfill(4)
 		retry_args = {
 			'mode': 'watch',
 			'season': season,
 			'game_id': game_id,
+			'stream_type': stream_type,
 			'publish_point_home': publish_point['home'],
 			'publish_point_away': publish_point['away'],
-			'game_ended': game_ended,
 		}
-		view_options = [
-			(__language__(30025), 'home', 'live', self.game_center.PERSPECTIVE_HOME),
-			(__language__(30026), 'away', 'live', self.game_center.PERSPECTIVE_AWAY),
-			(__language__(30059), None, 'condensed', self.game_center.PERSPECTIVE_HOME),
-			(__language__(30060), None, 'condensed', self.game_center.PERSPECTIVE_AWAY),
-			(None, None, 'highlights', None),
+
+		if stream_type == self.STREAM_TYPE_HIGHLIGHTS:
+			highlights = self.game_center.get_game_highlights(season, game_id)
+			if 'home' in highlights and 'publishPoint' in highlights['home']:
+				self.add_item(__language__(30025), highlights['home']['publishPoint'])
+			if 'away' in highlights and 'publishPoint' in highlights['away']:
+				self.add_item(__language__(30026), highlights['away']['publishPoint'])
+			return
+
+		perspectives = [
+			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
+			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
 		]
 
 		seen_urls = {}
 		use_bitrate = None
-		for label, pub_point_key, stream_type, perspective in view_options:
+		for label, pub_point_key, perspective in perspectives:
 			try:
-				if stream_type == 'condensed' and game_ended != True:
-					continue
-				if stream_type == 'highlights':
-					highlights = self.game_center.get_game_highlights(season, game_id)
-					if 'home' in highlights and 'publishPoint' in highlights['home']:
-						self.add_item(__language__(30061), highlights['home']['publishPoint'])
-					if 'away' in highlights and 'publishPoint' in highlights['away']:
-						self.add_item(__language__(30062), highlights['away']['publishPoint'])
-					continue
-
-				if pub_point_key is not None and publish_point[pub_point_key] is not None:
+				if stream_type == self.STREAM_TYPE_LIVE and publish_point[pub_point_key] is not None:
 					playlists = self.game_center.get_playlists_from_m3u8_url(publish_point[pub_point_key])
 				else:
 					playlists = self.game_center.get_video_playlists(season, game_id, stream_type, perspective)
@@ -329,7 +352,7 @@ class XBMC_NHL_GameCenter(object):
 				if not 'publishPoint' in game['program']:
 					continue
 				self.add_folder(self.game_title(game, None), {
-					'mode': 'watch',
+					'mode': 'view_options',
 					'season': season,
 					'game_id': game['id'].zfill(4),
 					'publish_point_home': game['program']['publishPoint']['home'],
@@ -359,7 +382,7 @@ try:
 	elif mode[0] == 'list':
 		today_only = __addonargs__.get('type')[0] == 'today'
 		game_center.MODE_list(today_only)
-	elif mode[0] == 'watch':
+	elif mode[0] == 'view_options' or mode[0] == 'watch':
 		season      = __addonargs__.get('season')[0]
 		game_id     = __addonargs__.get('game_id')[0]
 		pub_point   = {
@@ -370,8 +393,12 @@ try:
 			pub_point['home'] = None
 		if pub_point['away'] == 'None':
 			pub_point['away'] = None
-		game_ended  = __addonargs__.get('game_ended')[0] == 'True'
-		game_center.MODE_watch(season, game_id, pub_point, game_ended)
+		if mode[0] == 'view_options':
+			game_ended = __addonargs__.get('game_ended')[0] == 'True'
+			game_center.MODE_view_options(season, game_id, pub_point, game_ended)
+		else:
+			stream_type = __addonargs__.get('stream_type')[0]
+			game_center.MODE_watch(season, game_id, stream_type, pub_point)
 	elif mode[0] == 'archives':
 		season = __addonargs__.get('season')[0]
 		if season == 'None':

@@ -112,11 +112,11 @@ msgid "(Ended)"
 msgstr ""
 
 msgctxt "#30025"
-msgid "Full game (home stream)"
+msgid "Home stream"
 msgstr ""
 
 msgctxt "#30026"
-msgid "Full game (away stream)"
+msgid "Away stream"
 msgstr ""
 
 msgctxt "#30027"
@@ -248,17 +248,13 @@ msgid "Only the following authentication schemes are supported: None and Basic"
 msgstr ""
 
 msgctxt "#30059"
-msgid "Condensed game (home stream)"
+msgid "Full game"
 msgstr ""
 
 msgctxt "#30060"
-msgid "Condensed game (away stream)"
+msgid "Condensed game"
 msgstr ""
 
 msgctxt "#30061"
-msgid "Game highlights (home stream)"
-msgstr ""
-
-msgctxt "#30062"
-msgid "Game highlights (away stream)"
+msgid "Game highlights"
 msgstr ""
