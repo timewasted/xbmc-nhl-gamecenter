@@ -21,7 +21,8 @@ __profile__     = __addon__.getAddonInfo('profile').decode('utf-8')
 __language__    = __addon__.getLocalizedString
 __teams_json__  = os.path.join(__cwd__, 'teams.json')
 __cookiesfile__ = xbmc.translatePath(os.path.join(__profile__, 'cookies.lwp'))
-gameTimeFormat  = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
+
+game_time_format = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
 
 class XBMC_NHL_GameCenter(object):
 	STREAM_TYPE_LIVE       = 'live'
@@ -155,12 +156,12 @@ class XBMC_NHL_GameCenter(object):
 				away_team_score = str(scoreboard[game['id']]['ats'])
 
 		# Get the required dates and times.
-		currentTimeUTC = datetime.utcnow().replace(tzinfo=tz.tzutc())
+		current_time_utc = datetime.utcnow().replace(tzinfo=tz.tzutc())
 		if 'gameTimeGMT' in game:
-			startTimeGMT = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
-			startTimeLocal = startTimeGMT.astimezone(tz.tzlocal()).strftime(gameTimeFormat)
+			start_time_gmt = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
+			start_time_local = start_time_gmt.astimezone(tz.tzlocal()).strftime(game_time_format)
 		else:
-			startTimeLocal = parser.parse(game['date']).strftime(xbmc.getRegion('dateshort'))
+			start_time_local = parser.parse(game['date']).strftime(xbmc.getRegion('dateshort'))
 
 		# Start with the basic title of "Team vs Team".
 		lang_id = 30027
@@ -174,14 +175,14 @@ class XBMC_NHL_GameCenter(object):
 		if 'blocked' in game:
 			title = __language__(30022) + ' ' + title
 		else:
-			gameEnded = False
+			game_ended = False
 			if 'gameEndTimeGMT' in game:
 				endTimeGMT = parser.parse(game['gameEndTimeGMT']).replace(tzinfo=tz.tzutc())
-				if currentTimeUTC >= endTimeGMT:
+				if current_time_utc >= endTimeGMT:
 					# Game has ended.
-					gameEnded = True
+					game_ended = True
 					title = __language__(30024) + ' ' + title
-			if gameEnded == False and 'isLive' in game and currentTimeUTC >= startTimeGMT:
+			if game_ended == False and 'isLive' in game and current_time_utc >= start_time_gmt:
 				# Game is in progress.
 				title = __language__(30023) + ' ' + title
 
@@ -190,7 +191,7 @@ class XBMC_NHL_GameCenter(object):
 			title += ' (%s-%s)' % (home_team_score, away_team_score)
 
 		# Prepend the game start time.
-		return startTimeLocal + ': ' + title
+		return start_time_local + ': ' + title
 
 	def MODE_list(self, today_only):
 		retry_args = {'mode': 'list'}
