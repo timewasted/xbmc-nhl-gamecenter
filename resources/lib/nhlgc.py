@@ -22,6 +22,15 @@ class nhlgc(object):
 	REGSEASON  = '02'
 	POSTSEASON = '03'
 
+	# NOTE: The server that hosts the 2009 and earlier seasons doesn't allow
+	# access to the videos (HTTP 403 code). I'm unsure if there is anything
+	# that can be done to fix this.
+	#
+	# Sample URLs:
+	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2009/2_1_wsh_bos_0910_20091001_FINAL_hd.mp4
+	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
+	MIN_ARCHIVED_SEASON = 2010
+
 	def __init__(self, username, password, rogers_login, proxy_config, cookies_file):
 		self.urls = {
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
@@ -360,6 +369,8 @@ class nhlgc(object):
 		archives = []
 		try:
 			for archive_season in r_xml['result']['season']:
+				if int(archive_season['@id']) < self.MIN_ARCHIVED_SEASON:
+					continue
 				season = {}
 				season['season'] = archive_season['@id']
 				season['months'] = []
@@ -388,14 +399,7 @@ class nhlgc(object):
 		##
 
 		season = int(season)
-		if season <= 2009:
-			# NOTE: The server that hosts the 2009 and earlier seasons doesn't
-			# allow access to the videos (HTTP 403 code). I'm unsure if there
-			# is anything that can be done to fix this.
-			#
-			# Sample URLs:
-			# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2009/2_1_wsh_bos_0910_20091001_FINAL_hd.mp4
-			# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
+		if season < self.MIN_ARCHIVED_SEASON:
 			return []
 
 		params = {
