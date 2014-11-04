@@ -25,10 +25,6 @@ __cookiesfile__ = xbmc.translatePath(os.path.join(__profile__, 'cookies.lwp'))
 game_time_format = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
 
 class XBMC_NHL_GameCenter(object):
-	STREAM_TYPE_LIVE       = 'live'
-	STREAM_TYPE_CONDENSED  = 'condensed'
-	STREAM_TYPE_HIGHLIGHTS = 'highlights'
-
 	# This is the list of bitrates defined in settings.xml. These two sources
 	# should be kept in sync!
 	SETTINGS_BITRATES = [
@@ -226,7 +222,7 @@ class XBMC_NHL_GameCenter(object):
 					params['game_ended'] = True
 				else:
 					params['mode'] = 'watch'
-					params['stream_type'] = self.STREAM_TYPE_LIVE
+					params['stream_type'] = self.game_center.STREAM_TYPE_LIVE
 				self.add_folder(self.game_title(game, scoreboard), params)
 			return
 		except nhlgc.NetworkError as error:
@@ -240,12 +236,12 @@ class XBMC_NHL_GameCenter(object):
 	def MODE_view_options(self, season, game_id, publish_point, game_ended):
 		game_id = game_id.zfill(4)
 		view_options = [
-			(__language__(30059), self.STREAM_TYPE_LIVE),
+			(__language__(30059), self.game_center.STREAM_TYPE_LIVE),
 		]
 		if game_ended == True:
 			view_options += [
-				(__language__(30060), self.STREAM_TYPE_CONDENSED),
-				(__language__(30061), self.STREAM_TYPE_HIGHLIGHTS),
+				(__language__(30060), self.game_center.STREAM_TYPE_CONDENSED),
+				(__language__(30061), self.game_center.STREAM_TYPE_HIGHLIGHTS),
 			]
 		for label, stream_type in view_options:
 			self.add_folder(label, {
@@ -268,7 +264,7 @@ class XBMC_NHL_GameCenter(object):
 			'publish_point_away': publish_point['away'],
 		}
 
-		if stream_type == self.STREAM_TYPE_HIGHLIGHTS:
+		if stream_type == self.game_center.STREAM_TYPE_HIGHLIGHTS:
 			highlights = self.game_center.get_game_highlights(season, game_id)
 			if 'home' in highlights and 'publishPoint' in highlights['home']:
 				self.add_item(__language__(30025), highlights['home']['publishPoint'])
@@ -285,7 +281,7 @@ class XBMC_NHL_GameCenter(object):
 		use_bitrate = None
 		for label, pub_point_key, perspective in perspectives:
 			try:
-				if stream_type == self.STREAM_TYPE_LIVE and publish_point[pub_point_key] is not None:
+				if stream_type == self.game_center.STREAM_TYPE_LIVE and publish_point[pub_point_key] is not None:
 					playlists = self.game_center.get_playlists_from_m3u8_url(publish_point[pub_point_key])
 				else:
 					playlists = self.game_center.get_video_playlists(season, game_id, stream_type, perspective)

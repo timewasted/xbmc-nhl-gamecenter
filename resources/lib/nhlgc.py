@@ -15,6 +15,10 @@ class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
 	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
 
+	STREAM_TYPE_LIVE       = 'live'
+	STREAM_TYPE_CONDENSED  = 'condensed'
+	STREAM_TYPE_HIGHLIGHTS = 'highlights'
+
 	PERSPECTIVE_HOME = '2'
 	PERSPECTIVE_AWAY = '4'
 
