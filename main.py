@@ -210,10 +210,13 @@ class XBMC_NHL_GameCenter(object):
 					'game_id': game['id'].zfill(4),
 					'publish_point_home': None,
 					'publish_point_away': None,
+					'game_ended': False,
 				}
 				if 'program' in game and 'publishPoint' in game['program']:
 					params['publish_point_home'] = game['program']['publishPoint']['home']
 					params['publish_point_away'] = game['program']['publishPoint']['away']
+				if 'gameEndTimeGMT' in game:
+					params['game_ended'] = True
 				self.add_folder(self.game_title(game, scoreboard), params)
 			return
 		except nhlgc.NetworkError as error:
@@ -224,7 +227,7 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		self.add_item(__language__(30030), __addonurl__, retry_args)
 
-	def MODE_watch(self, season, game_id, publish_point):
+	def MODE_watch(self, season, game_id, publish_point, game_ended):
 		game_id = game_id.zfill(4)
 		retry_args = {
 			'mode': 'watch',
@@ -232,6 +235,7 @@ class XBMC_NHL_GameCenter(object):
 			'game_id': game_id,
 			'publish_point_home': publish_point['home'],
 			'publish_point_away': publish_point['away'],
+			'game_ended': game_ended,
 		}
 		view_options = [
 			(__language__(30025), 'home', 'live', self.game_center.PERSPECTIVE_HOME),
@@ -245,6 +249,8 @@ class XBMC_NHL_GameCenter(object):
 		use_bitrate = None
 		for label, pub_point_key, stream_type, perspective in view_options:
 			try:
+				if stream_type == 'condensed' and game_ended != True:
+					continue
 				if stream_type == 'highlights':
 					highlights = self.game_center.get_game_highlights(season, game_id)
 					if 'home' in highlights and 'publishPoint' in highlights['home']:
@@ -328,6 +334,7 @@ class XBMC_NHL_GameCenter(object):
 					'game_id': game['id'].zfill(4),
 					'publish_point_home': game['program']['publishPoint']['home'],
 					'publish_point_away': game['program']['publishPoint']['away'],
+					'game_ended': True,
 				})
 			return
 		except nhlgc.NetworkError as error:
@@ -363,7 +370,8 @@ try:
 			pub_point['home'] = None
 		if pub_point['away'] == 'None':
 			pub_point['away'] = None
-		game_center.MODE_watch(season, game_id, pub_point)
+		game_ended  = __addonargs__.get('game_ended')[0] == 'True'
+		game_center.MODE_watch(season, game_id, pub_point, game_ended)
 	elif mode[0] == 'archives':
 		season = __addonargs__.get('season')[0]
 		if season == 'None':
