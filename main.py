@@ -181,7 +181,9 @@ class XBMC_NHL_GameCenter(object):
 				if current_time_utc >= endTimeGMT:
 					# Game has ended.
 					game_ended = True
-					title = __language__(30024) + ' ' + title
+					time_delta = current_time_utc - endTimeGMT
+					if time_delta.days < 1:
+						title = __language__(30024) + ' ' + title
 			if game_ended == False and 'isLive' in game and current_time_utc >= start_time_gmt:
 				# Game is in progress.
 				title = __language__(30023) + ' ' + title
