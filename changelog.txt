@@ -1,6 +1,7 @@
-v0.0.14 (Not yet released)
+v0.0.14 (November 4th, 2014)
 - Better handling of different views (full/condensed game, game highlights)
 - Don't show the "(Ended)" tag for games that ended 24 hours ago
+- Don't show unsupported archived seasons
 
 v0.0.13 (November 3rd, 2014)
 - Re-name "Live games" to "Today's games"
