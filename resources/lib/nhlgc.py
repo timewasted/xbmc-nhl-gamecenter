@@ -176,7 +176,7 @@ class nhlgc(object):
 		for details in scoreboard['games']:
 			# 'id' is YYYYxxIIII where:
 			# - YYYY is the year
-			# - xx is the magic string '02'
+			# - xx is the season type (pre, regular, post)
 			# - IIII is the actual game ID
 			#
 			# We are going to key off the actual game ID.
