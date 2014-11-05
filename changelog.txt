@@ -1,3 +1,6 @@
+v0.0.15 (November 4th, 2014)
+- Fix an error when automatically retrying to get the video playlists
+
 v0.0.14 (November 4th, 2014)
 - Better handling of different views (full/condensed game, game highlights)
 - Don't show the "(Ended)" tag for games that ended 24 hours ago
