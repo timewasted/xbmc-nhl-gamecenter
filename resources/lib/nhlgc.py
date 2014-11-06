@@ -21,10 +21,16 @@ class nhlgc(object):
 
 	PERSPECTIVE_HOME = '2'
 	PERSPECTIVE_AWAY = '4'
+	PERSPECTIVE_FRENCH = '8'
 
 	PRESEASON  = '01'
 	REGSEASON  = '02'
 	POSTSEASON = '03'
+
+	FRENCH_STREAM_TEAMS = {
+		'MON': True, # Montreal Canadiens
+		'OTT': True, # Ottawa Senators
+	}
 
 	# NOTE: The server that hosts the 2009 and earlier seasons doesn't allow
 	# access to the videos (HTTP 403 code). I'm unsure if there is anything
@@ -226,14 +232,28 @@ class nhlgc(object):
 					r_xml['result']['games']['game'][key]['awayTeam'] = game['awayTeam'][0]
 
 				# Sanitize publishPoint.
-				if 'program' in game and 'publishPoint' in game['program']:
+				publish_point = {
+					'home': None,
+					'away': None,
+					'french': None,
+				}
+				if 'program' not in game:
+					r_xml['result']['games']['game'][key]['program'] = {
+						'publishPoint': publish_point,
+					}
+				elif 'publishPoint' not in game['program']:
+					r_xml['result']['games']['game'][key]['program']['publishPoint'] = publish_point
+				else:
 					pub_point = game['program']['publishPoint']
 					pub_point = pub_point.replace('adaptive://', 'http://')
 					pub_point = pub_point.replace('_pc.mp4', '.mp4.m3u8')
-					r_xml['result']['games']['game'][key]['program']['publishPoint'] = {
-						'home': pub_point,
-						'away': pub_point.replace('_h_', '_a_'),
-					}
+					publish_point['home'] = pub_point
+					publish_point['away'] = pub_point.replace('_h_', '_a_')
+					if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
+						pub_point = pub_point.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
+						pub_point = pub_point.replace('_h_', '_fr_')
+						publish_point['french'] = pub_point
+					r_xml['result']['games']['game'][key]['program']['publishPoint'] = publish_point
 			return r_xml['result']['games']['game']
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
@@ -294,10 +314,10 @@ class nhlgc(object):
 
 		# FIXME: self.REGSEASON shouldn't be hardcoded.
 		base_id = season + self.REGSEASON + game_id.zfill(4)
-		home_suffix, away_suffix = '-X-h', '-X-a'
+		home_suffix, away_suffix, french_suffix = '-X-h', '-X-a', '-X-fr'
 		params = {
 			'format': 'json',
-			'ids': base_id + home_suffix + ',' + base_id + away_suffix,
+			'ids': base_id + home_suffix + ',' + base_id + away_suffix + ',' + base_id + french_suffix,
 		}
 		try:
 			r = requests.get(self.urls['highlights'], params=params, cookies=None)
@@ -317,6 +337,8 @@ class nhlgc(object):
 				highlights_dict['home'] = details
 			elif details['id'] == base_id + away_suffix:
 				highlights_dict['away'] = details
+			elif details['id'] == base_id + french_suffix:
+				highlights_dict['french'] = details
 
 		return highlights_dict
 
@@ -435,25 +457,33 @@ class nhlgc(object):
 			for key, game in enumerate(r_xml['result']['games']['game']):
 				if not 'publishPoint' in game['program']:
 					continue
-				url, qs = game['program']['publishPoint'].split('?', 1)
+				orig_url, qs = game['program']['publishPoint'].split('?', 1)
 
 				if season >= 2012:
 					host = 'http://nlds150.cdnak.neulion.com/'
-					base_url = url[url.find('/nlds_vod/') + 1:]
-					new_url = host + base_url + '.m3u8'
+					base_url = orig_url[orig_url.find('/nlds_vod/') + 1:]
+					url = host + base_url + '.m3u8'
+					french_url = url.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
+					french_url = french_url.replace('_h_', '_fr_')
+					french_url = french_url.replace('_whole_2', '_whole_1')
 				elif season >= 2010:
 					if season == 2011:
 						host = 'http://nhl.cdn.neulion.net/'
 					else:
 						host = 'http://nhl.cdnllnwnl.neulion.net/'
-					base_url = url[url.find('u/nhlmobile/'):]
+					base_url = orig_url[orig_url.find('u/nhlmobile/'):]
 					base_url = base_url.replace('/pc/', '/ced/')
 					base_url = base_url.replace('.mp4', '')
-					new_url = host + base_url + '/v1/playlist.m3u8'
+					url = host + base_url + '/v1/playlist.m3u8'
+					french_url = url.replace('/vod/nhl/', '/vod/nhlfr/')
+					french_url = french_url.replace('_h_', '_fr_')
 				r_xml['result']['games']['game'][key]['program']['publishPoint'] = {
-					'home': new_url + '?' + qs,
-					'away': new_url.replace('_h_', '_a_') + '?' + qs,
+					'home': url + '?' + qs,
+					'away': url.replace('_h_', '_a_') + '?' + qs,
+					'french': None,
 				}
+				if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
+					r_xml['result']['games']['game'][key]['program']['publishPoint']['french'] = french_url
 			return r_xml['result']['games']['game']
 		except KeyError:
 			raise self.LogicError(fn_name, 'No archived games found.')

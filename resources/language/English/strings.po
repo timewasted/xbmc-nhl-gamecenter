@@ -258,3 +258,7 @@ msgstr ""
 msgctxt "#30061"
 msgid "Game highlights"
 msgstr ""
+
+msgctxt "#30062"
+msgid "French stream"
+msgstr ""
