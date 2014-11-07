@@ -1,3 +1,6 @@
+v0.0.17 (November 6th, 2014)
+- Add support for watching French streams for live games
+
 v0.0.16 (November 6th, 2014)
 - Add support for watching French streams when they're available
 

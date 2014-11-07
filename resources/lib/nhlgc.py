@@ -231,6 +231,11 @@ class nhlgc(object):
 				if type(game['awayTeam']) == type(list()):
 					r_xml['result']['games']['game'][key]['awayTeam'] = game['awayTeam'][0]
 
+				# Add an entry for games that generally have a French stream.
+				r_xml['result']['games']['game'][key]['frenchStream'] = False
+				if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
+					r_xml['result']['games']['game'][key]['frenchStream'] = True
+
 				# Sanitize publishPoint.
 				publish_point = {
 					'home': None,
@@ -249,7 +254,7 @@ class nhlgc(object):
 					pub_point = pub_point.replace('_pc.mp4', '.mp4.m3u8')
 					publish_point['home'] = pub_point
 					publish_point['away'] = pub_point.replace('_h_', '_a_')
-					if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
+					if r_xml['result']['games']['game'][key]['frenchStream'] == True:
 						pub_point = pub_point.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
 						pub_point = pub_point.replace('_h_', '_fr_')
 						publish_point['french'] = pub_point
@@ -482,7 +487,9 @@ class nhlgc(object):
 					'away': url.replace('_h_', '_a_') + '?' + qs,
 					'french': None,
 				}
+				r_xml['result']['games']['game'][key]['frenchStream'] = False
 				if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
+					r_xml['result']['games']['game'][key]['frenchStream'] = True
 					r_xml['result']['games']['game'][key]['program']['publishPoint']['french'] = french_url
 			return r_xml['result']['games']['game']
 		except KeyError:
