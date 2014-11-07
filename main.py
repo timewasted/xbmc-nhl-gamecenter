@@ -97,7 +97,7 @@ class XBMC_NHL_GameCenter(object):
 		xbmcgui.Dialog().ok(__language__(30035), str(msg))
 
 	def add_folder(self, label, params):
-		icon = 'DefaultFolder.png'
+		icon = __addonicon__
 		try:
 			home_team, away_team = params['home_team'], params['away_team']
 			if 'alt-abbr' in self.team_info[home_team]:
