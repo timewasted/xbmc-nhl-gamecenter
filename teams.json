@@ -7,6 +7,7 @@
 		"division": "pacific"
 	},
 	"ARI": {
+		"alt-abbr": "PHX",
 		"city": "Arizona",
 		"team": "Coyotes",
 		"full-name": "Arizona Coyotes",
@@ -28,6 +29,7 @@
 		"division": "pacific"
 	},
 	"LOS": {
+		"alt-abbr": "LAK",
 		"city": "Los Angeles",
 		"team": "Kings",
 		"full-name": "Los Angeles Kings",
@@ -35,6 +37,7 @@
 		"division": "pacific"
 	},
 	"SAN": {
+		"alt-abbr": "SJS",
 		"city": "San Jose",
 		"team": "Sharks",
 		"full-name": "San Jose Sharks",
@@ -126,6 +129,7 @@
 		"division": "atlantic"
 	},
 	"MON": {
+		"alt-abbr": "MTL",
 		"city": "Montreal",
 		"team": "Canadiens",
 		"full-name": "Montreal Canadiens",
@@ -140,6 +144,7 @@
 		"division": "atlantic"
 	},
 	"TAM": {
+		"alt-abbr": "TBL",
 		"city": "Tampa Bay",
 		"team": "Lightning",
 		"full-name": "Tampa Bay Lightning",
@@ -161,6 +166,7 @@
 		"division": "metropolitan"
 	},
 	"CMB": {
+		"alt-abbr": "CBJ",
 		"city": "Columbus",
 		"team": "Blue Jackets",
 		"full-name": "Columbus Blue Jackets",

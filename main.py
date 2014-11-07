@@ -41,6 +41,9 @@ class XBMC_NHL_GameCenter(object):
 		'240',          # 9
 		'150',          # 10
 	]
+
+	MATCHUP_IMAGES_URL = 'http://nhl.cdn.neulion.net/u/nhlgc_roku/images/HD/%s_at_%s.jpg'
+
 	def __init__(self):
 		username    = __addon__.getSetting('gc_username')
 		password    = __addon__.getSetting('gc_password')
@@ -94,11 +97,22 @@ class XBMC_NHL_GameCenter(object):
 		xbmcgui.Dialog().ok(__language__(30035), str(msg))
 
 	def add_folder(self, label, params):
+		icon = 'DefaultFolder.png'
+		try:
+			home_team, away_team = params['home_team'], params['away_team']
+			if 'alt-abbr' in self.team_info[home_team]:
+				home_team = self.team_info[home_team]['alt-abbr']
+			if 'alt-abbr' in self.team_info[away_team]:
+				away_team = self.team_info[away_team]['alt-abbr']
+			icon = self.MATCHUP_IMAGES_URL % (away_team, home_team)
+		except KeyError:
+			pass
+
 		xbmcplugin.addDirectoryItem(
 			isFolder=True,
 			handle=__addonhandle__,
 			url=__addonurl__ + '?' + urllib.urlencode(params),
-			listitem=xbmcgui.ListItem(label, iconImage='DefaultFolder.png')
+			listitem=xbmcgui.ListItem(label, iconImage=icon)
 		)
 
 	def add_item(self, label, url, params=None):
@@ -211,6 +225,8 @@ class XBMC_NHL_GameCenter(object):
 					'mode': 'view_options',
 					'season': game['season'],
 					'game_id': game['id'].zfill(4),
+					'home_team': game['homeTeam'],
+					'away_team': game['awayTeam'],
 					'french_stream': game['frenchStream'],
 					'publish_point_home': game['program']['publishPoint']['home'],
 					'publish_point_away': game['program']['publishPoint']['away'],
@@ -232,7 +248,7 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		self.add_item(__language__(30030), __addonurl__, retry_args)
 
-	def MODE_view_options(self, season, game_id, french_stream, publish_point, game_ended):
+	def MODE_view_options(self, season, game_id, home_team, away_team, french_stream, publish_point, game_ended):
 		game_id = game_id.zfill(4)
 		view_options = [
 			(__language__(30059), self.game_center.STREAM_TYPE_LIVE),
@@ -247,6 +263,8 @@ class XBMC_NHL_GameCenter(object):
 				'mode': 'watch',
 				'season': season,
 				'game_id': game_id,
+				'home_team': home_team,
+				'away_team': away_team,
 				'french_stream': french_stream,
 				'stream_type': stream_type,
 				'publish_point_home': publish_point['home'],
@@ -254,12 +272,14 @@ class XBMC_NHL_GameCenter(object):
 				'publish_point_french': publish_point['french'],
 			})
 
-	def MODE_watch(self, season, game_id, french_stream, stream_type, publish_point):
+	def MODE_watch(self, season, game_id, home_team, away_team, french_stream, stream_type, publish_point):
 		game_id = game_id.zfill(4)
 		retry_args = {
 			'mode': 'watch',
 			'season': season,
 			'game_id': game_id,
+			'home_team': home_team,
+			'away_team': away_team,
 			'french_stream': french_stream,
 			'stream_type': stream_type,
 			'publish_point_home': publish_point['home'],
@@ -361,6 +381,8 @@ class XBMC_NHL_GameCenter(object):
 					'mode': 'view_options',
 					'season': season,
 					'game_id': game['id'].zfill(4),
+					'home_team': game['homeTeam'],
+					'away_team': game['awayTeam'],
 					'french_stream': game['frenchStream'],
 					'publish_point_home': game['program']['publishPoint']['home'],
 					'publish_point_away': game['program']['publishPoint']['away'],
@@ -393,6 +415,8 @@ try:
 	elif mode[0] == 'view_options' or mode[0] == 'watch':
 		season        = __addonargs__.get('season')[0]
 		game_id       = __addonargs__.get('game_id')[0]
+		home_team     = __addonargs__.get('home_team')[0]
+		away_team     = __addonargs__.get('away_team')[0]
 		french_stream = __addonargs__.get('french_stream')[0] == 'True'
 		pub_point     = {
 			'home':   __addonargs__.get('publish_point_home')[0],
@@ -407,10 +431,10 @@ try:
 			pub_point['french'] = None
 		if mode[0] == 'view_options':
 			game_ended = __addonargs__.get('game_ended')[0] == 'True'
-			game_center.MODE_view_options(season, game_id, french_stream, pub_point, game_ended)
+			game_center.MODE_view_options(season, game_id, home_team, away_team, french_stream, pub_point, game_ended)
 		else:
 			stream_type = __addonargs__.get('stream_type')[0]
-			game_center.MODE_watch(season, game_id, french_stream, stream_type, pub_point)
+			game_center.MODE_watch(season, game_id, home_team, away_team, french_stream, stream_type, pub_point)
 	elif mode[0] == 'archives':
 		season = __addonargs__.get('season')[0]
 		if season == 'None':
