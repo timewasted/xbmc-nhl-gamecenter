@@ -1,7 +1,7 @@
 xbmc-nhl-gamecenter
 ===================
 
-XBMC-NHL-GameCenter is a video plugin for Kodi (formerly known as XBMC) that allows you to watch NHL GameCenter videos.
+XBMC-NHL-GameCenter is a video plugin for Kodi (formerly known as XBMC) that allows you to watch NHL GameCenter videos. [View the discussion thread here.](http://forum.kodi.tv/showthread.php?tid=207178)
 
 This plugin requires a valid subscription to NHL GameCenter, and is subject to local blackouts imposed by the NHL.
 
