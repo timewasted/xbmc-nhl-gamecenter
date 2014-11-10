@@ -41,7 +41,7 @@ class nhlgc(object):
 	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
 	MIN_ARCHIVED_SEASON = 2010
 
-	def __init__(self, username, password, rogers_login, proxy_config, cookies_file):
+	def __init__(self, username, password, rogers_login, proxy_config, cookies_file, skip_networking=False):
 		self.urls = {
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
 			'login':            'https://gamecenter.nhl.com/nhlgc/secure/login',
@@ -73,13 +73,14 @@ class nhlgc(object):
 			}
 
 		# NOTE: The following is required to get a semi-valid RFC3339 timestamp.
-		try:
-			self.session.post(self.urls['console'], data={'isFlex': 'true'})
-		except requests.exceptions.ProxyError as error:
-			raise self.LogicError('__init__', '%s[CR]%s' % (str(error[0][0]), str(error[0][1])))
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError('__init__', str(error))
-		self.save_cookies()
+		if not skip_networking:
+			try:
+				self.session.post(self.urls['console'], data={'isFlex': 'true'})
+			except requests.exceptions.ProxyError as error:
+				raise self.LogicError('__init__', '%s[CR]%s' % (str(error[0][0]), str(error[0][1])))
+			except requests.exceptions.ConnectionError as error:
+				raise self.NetworkError('__init__', str(error))
+			self.save_cookies()
 
 	class LogicError(Exception):
 		def __init__(self, fn_name, message):
