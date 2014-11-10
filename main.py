@@ -1,4 +1,4 @@
-import os, sys, urllib, urlparse
+import base64, os, pickle, sys, urllib, urlparse
 import xbmc, xbmcaddon, xbmcgui, xbmcplugin
 try:
 	import simplejson as json
@@ -15,6 +15,7 @@ __addonurl__    = sys.argv[0]
 __addonhandle__ = int(sys.argv[1])
 __addonargs__   = urlparse.parse_qs(sys.argv[2][1:])
 __addonicon__   = __addon__.getAddonInfo('icon')
+__addonfanart__ = __addon__.getAddonInfo('fanart')
 __addonname__   = __addon__.getAddonInfo('name')
 __cwd__         = __addon__.getAddonInfo('path').decode('utf-8')
 __profile__     = __addon__.getAddonInfo('profile').decode('utf-8')
@@ -96,33 +97,44 @@ class XBMC_NHL_GameCenter(object):
 	def display_notification(self, msg):
 		xbmcgui.Dialog().ok(__language__(30035), str(msg))
 
-	def add_folder(self, label, params):
+	def add_folder(self, label=None, params={}, game=None):
 		icon = __addonicon__
-		try:
-			home_team, away_team = params['home_team'], params['away_team']
-			if 'alt-abbr' in self.team_info[home_team]:
-				home_team = self.team_info[home_team]['alt-abbr']
-			if 'alt-abbr' in self.team_info[away_team]:
-				away_team = self.team_info[away_team]['alt-abbr']
-			icon = self.MATCHUP_IMAGES_URL % (away_team, home_team)
-		except KeyError:
-			pass
+		if game is not None:
+			params['game'] = self.serialize_data(game)
+			try:
+				home_team, away_team = game['home_team'], game['away_team']
+				if 'alt-abbr' in self.team_info[home_team]:
+					home_team = self.team_info[home_team]['alt-abbr']
+				if 'alt-abbr' in self.team_info[away_team]:
+					away_team = self.team_info[away_team]['alt-abbr']
+				icon = self.MATCHUP_IMAGES_URL % (away_team, home_team)
+			except KeyError:
+				pass
 
+		url = __addonurl__
+		if len(params) > 0:
+			url += '?' + urllib.urlencode(params)
+
+		item = xbmcgui.ListItem(label, iconImage=icon)
+		item.setProperty('fanart_image', __addonfanart__)
 		xbmcplugin.addDirectoryItem(
 			isFolder=True,
 			handle=__addonhandle__,
-			url=__addonurl__ + '?' + urllib.urlencode(params),
-			listitem=xbmcgui.ListItem(label, iconImage=icon)
+			url=url,
+			listitem=item,
 		)
 
 	def add_item(self, label, url, params=None):
 		if params is not None:
 			url += '?' + urllib.urlencode(params)
+
+		li = xbmcgui.ListItem(label, iconImage='DefaultVideo.png')
+		li.setProperty('fanart_image', __addonfanart__)
 		xbmcplugin.addDirectoryItem(
 			isFolder=False,
 			handle=__addonhandle__,
 			url=url,
-			listitem=xbmcgui.ListItem(label, iconImage='DefaultVideo.png')
+			listitem=li,
 		)
 
 	def select_bitrate(self, streams):
@@ -144,8 +156,8 @@ class XBMC_NHL_GameCenter(object):
 
 	def game_title(self, game, scoreboard):
 		# Get the team names.
-		home_team = game['homeTeam']
-		away_team = game['awayTeam']
+		home_team = game['home_team']
+		away_team = game['away_team']
 		if self.team_info_key is not None:
 			if home_team in self.team_info:
 				home_team = self.team_info[home_team][self.team_info_key]
@@ -153,22 +165,17 @@ class XBMC_NHL_GameCenter(object):
 				away_team = self.team_info[away_team][self.team_info_key]
 
 		# Get the score for the game.
-		home_team_score, away_team_score = None, None
-		game['id'] = game['id'].zfill(4)
-		# First check the game info itself.
-		if 'awayGoals' in game and 'homeGoals' in game:
-			home_team_score = game['homeGoals']
-			away_team_score = game['awayGoals']
-		# Fall back to checking the scoreboard.
-		elif scoreboard is not None and game['id'] in scoreboard:
-			if str(scoreboard[game['id']]['hts']) != '' and str(scoreboard[game['id']]['ats']) != '':
+		home_team_score, away_team_score = game['home_goals'], game['away_goals']
+		if scoreboard is not None and game['id'] in scoreboard:
+			if home_team_score is None and str(scoreboard[game['id']]['hts']) != '':
 				home_team_score = str(scoreboard[game['id']]['hts'])
+			if away_team_score is None and str(scoreboard[game['id']]['ats']) != '':
 				away_team_score = str(scoreboard[game['id']]['ats'])
 
 		# Get the required dates and times.
 		current_time_utc = datetime.utcnow().replace(tzinfo=tz.tzutc())
-		if 'gameTimeGMT' in game:
-			start_time_gmt = parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc())
+		if game['start_time'] is not None:
+			start_time_gmt = parser.parse(game['start_time']).replace(tzinfo=tz.tzutc())
 			start_time_local = start_time_gmt.astimezone(tz.tzlocal()).strftime(game_time_format)
 		else:
 			start_time_local = parser.parse(game['date']).strftime(xbmc.getRegion('dateshort'))
@@ -182,19 +189,19 @@ class XBMC_NHL_GameCenter(object):
 		title = home_team + __language__(lang_id) + away_team
 
 		# Handle game status flags.
-		if 'blocked' in game:
+		if game['blocked']:
 			title = __language__(30022) + ' ' + title
 		else:
 			game_ended = False
-			if 'gameEndTimeGMT' in game:
-				endTimeGMT = parser.parse(game['gameEndTimeGMT']).replace(tzinfo=tz.tzutc())
-				if current_time_utc >= endTimeGMT:
+			if game['end_time'] is not None:
+				end_time_gmt = parser.parse(game['end_time']).replace(tzinfo=tz.tzutc())
+				if current_time_utc >= end_time_gmt:
 					# Game has ended.
 					game_ended = True
-					time_delta = current_time_utc - endTimeGMT
+					time_delta = current_time_utc - end_time_gmt
 					if time_delta.days < 1:
 						title = __language__(30024) + ' ' + title
-			if game_ended == False and 'isLive' in game and current_time_utc >= start_time_gmt:
+			if not game_ended and game['live'] and current_time_utc >= start_time_gmt:
 				# Game is in progress.
 				title = __language__(30023) + ' ' + title
 
@@ -204,6 +211,12 @@ class XBMC_NHL_GameCenter(object):
 
 		# Prepend the game start time.
 		return start_time_local + ': ' + title
+
+	def serialize_data(self, data):
+		return base64.b64encode(pickle.dumps(data, pickle.HIGHEST_PROTOCOL))
+
+	def unserialize_data(self, data):
+		return pickle.loads(base64.b64decode(data))
 
 	def MODE_list(self, today_only):
 		retry_args = {'mode': 'list'}
@@ -221,24 +234,18 @@ class XBMC_NHL_GameCenter(object):
 		try:
 			games = self.game_center.get_games_list(today_only)
 			for game in games:
-				params = {
-					'mode': 'view_options',
-					'season': game['season'],
-					'game_id': game['id'].zfill(4),
-					'home_team': game['homeTeam'],
-					'away_team': game['awayTeam'],
-					'french_stream': game['frenchStream'],
-					'publish_point_home': game['program']['publishPoint']['home'],
-					'publish_point_away': game['program']['publishPoint']['away'],
-					'publish_point_french': game['program']['publishPoint']['french'],
-					'game_ended': False,
-				}
-				if 'gameEndTimeGMT' in game:
-					params['game_ended'] = True
+				if game['end_time'] is not None:
+					params = {'mode': 'view_options'}
 				else:
-					params['mode'] = 'watch'
-					params['stream_type'] = self.game_center.STREAM_TYPE_LIVE
-				self.add_folder(self.game_title(game, scoreboard), params)
+					params = {
+						'mode': 'watch',
+						'stream_type': self.game_center.STREAM_TYPE_LIVE,
+					}
+				self.add_folder(
+					label=self.game_title(game, scoreboard),
+					params=params,
+					game=game,
+				)
 			return
 		except nhlgc.NetworkError as error:
 			self.display_notification(error)
@@ -248,47 +255,34 @@ class XBMC_NHL_GameCenter(object):
 			self.display_notification(error)
 		self.add_item(__language__(30030), __addonurl__, retry_args)
 
-	def MODE_view_options(self, season, game_id, home_team, away_team, french_stream, publish_point, game_ended):
-		game_id = game_id.zfill(4)
+	def MODE_view_options(self, game):
 		view_options = [
 			(__language__(30059), self.game_center.STREAM_TYPE_LIVE),
 		]
-		if game_ended == True:
+		if game['end_time'] is not None:
 			view_options += [
 				(__language__(30060), self.game_center.STREAM_TYPE_CONDENSED),
 				(__language__(30061), self.game_center.STREAM_TYPE_HIGHLIGHTS),
 			]
 		for label, stream_type in view_options:
-			self.add_folder(label, {
-				'mode': 'watch',
-				'season': season,
-				'game_id': game_id,
-				'home_team': home_team,
-				'away_team': away_team,
-				'french_stream': french_stream,
-				'stream_type': stream_type,
-				'publish_point_home': publish_point['home'],
-				'publish_point_away': publish_point['away'],
-				'publish_point_french': publish_point['french'],
-			})
+			self.add_folder(
+				label=label,
+				params={
+					'mode': 'watch',
+					'stream_type': stream_type,
+				},
+				game=game,
+			)
 
-	def MODE_watch(self, season, game_id, home_team, away_team, french_stream, stream_type, publish_point):
-		game_id = game_id.zfill(4)
+	def MODE_watch(self, game, stream_type):
 		retry_args = {
 			'mode': 'watch',
-			'season': season,
-			'game_id': game_id,
-			'home_team': home_team,
-			'away_team': away_team,
-			'french_stream': french_stream,
+			'game': game,
 			'stream_type': stream_type,
-			'publish_point_home': publish_point['home'],
-			'publish_point_away': publish_point['away'],
-			'publish_point_french': publish_point['french'],
 		}
 
 		if stream_type == self.game_center.STREAM_TYPE_HIGHLIGHTS:
-			highlights = self.game_center.get_game_highlights(season, game_id)
+			highlights = self.game_center.get_game_highlights(game['season'], game['id'])
 			if 'home' in highlights and 'publishPoint' in highlights['home']:
 				self.add_item(__language__(30025), highlights['home']['publishPoint'])
 			if 'away' in highlights and 'publishPoint' in highlights['away']:
@@ -301,17 +295,17 @@ class XBMC_NHL_GameCenter(object):
 			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
 			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
 		]
-		if french_stream == True:
+		if game['streams']['french'] is not None:
 			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
 
 		seen_urls = {}
 		use_bitrate = None
-		for label, pub_point_key, perspective in perspectives:
+		for label, stream_key, perspective in perspectives:
 			try:
-				if stream_type == self.game_center.STREAM_TYPE_LIVE and publish_point[pub_point_key] is not None:
-					playlists = self.game_center.get_playlists_from_m3u8_url(publish_point[pub_point_key])
+				if stream_type == self.game_center.STREAM_TYPE_LIVE and game['streams'][stream_key] is not None:
+					playlists = self.game_center.get_playlists_from_m3u8_url(game['streams'][stream_key])
 				else:
-					playlists = self.game_center.get_video_playlists(season, game_id, stream_type, perspective)
+					playlists = self.game_center.get_video_playlists(game['season'], game['id'], stream_type, perspective)
 
 				if len(playlists) == 1:
 					stream_url = playlists.values()[0]
@@ -375,20 +369,11 @@ class XBMC_NHL_GameCenter(object):
 		try:
 			games = self.game_center.get_archived_month(season, month)
 			for game in games:
-				if not 'publishPoint' in game['program']:
-					continue
-				self.add_folder(self.game_title(game, None), {
-					'mode': 'view_options',
-					'season': season,
-					'game_id': game['id'].zfill(4),
-					'home_team': game['homeTeam'],
-					'away_team': game['awayTeam'],
-					'french_stream': game['frenchStream'],
-					'publish_point_home': game['program']['publishPoint']['home'],
-					'publish_point_away': game['program']['publishPoint']['away'],
-					'publish_point_french': game['program']['publishPoint']['french'],
-					'game_ended': True,
-				})
+				self.add_folder(
+					label=self.game_title(game, None),
+					params={'mode': 'view_options'},
+					game=game,
+				)
 			return
 		except nhlgc.NetworkError as error:
 			self.display_notification(error)
@@ -405,42 +390,28 @@ class XBMC_NHL_GameCenter(object):
 try:
 	game_center = XBMC_NHL_GameCenter()
 	mode = __addonargs__.get('mode', None)
+	if type(mode) == type(list()):
+		mode = mode[0]
 	if mode is None:
 		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
 		game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
 		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
-	elif mode[0] == 'list':
+	elif mode == 'list':
 		today_only = __addonargs__.get('type')[0] == 'today'
 		game_center.MODE_list(today_only)
-	elif mode[0] == 'view_options' or mode[0] == 'watch':
-		season        = __addonargs__.get('season')[0]
-		game_id       = __addonargs__.get('game_id')[0]
-		home_team     = __addonargs__.get('home_team')[0]
-		away_team     = __addonargs__.get('away_team')[0]
-		french_stream = __addonargs__.get('french_stream')[0] == 'True'
-		pub_point     = {
-			'home':   __addonargs__.get('publish_point_home')[0],
-			'away':   __addonargs__.get('publish_point_away')[0],
-			'french': __addonargs__.get('publish_point_french')[0],
-		}
-		if pub_point['home'] == 'None':
-			pub_point['home'] = None
-		if pub_point['away'] == 'None':
-			pub_point['away'] = None
-		if pub_point['french'] == 'None':
-			pub_point['french'] = None
-		if mode[0] == 'view_options':
-			game_ended = __addonargs__.get('game_ended')[0] == 'True'
-			game_center.MODE_view_options(season, game_id, home_team, away_team, french_stream, pub_point, game_ended)
-		else:
-			stream_type = __addonargs__.get('stream_type')[0]
-			game_center.MODE_watch(season, game_id, home_team, away_team, french_stream, stream_type, pub_point)
-	elif mode[0] == 'archives':
+	elif mode == 'view_options':
+		game = game_center.unserialize_data(__addonargs__.get('game')[0])
+		game_center.MODE_view_options(game)
+	elif mode == 'watch':
+		game = game_center.unserialize_data(__addonargs__.get('game')[0])
+		stream_type = __addonargs__.get('stream_type')[0]
+		game_center.MODE_watch(game, stream_type)
+	elif mode == 'archives':
 		season = __addonargs__.get('season')[0]
 		if season == 'None':
 			season = None
 		game_center.MODE_archives(season)
-	elif mode[0] == 'archives_month':
+	elif mode == 'archives_month':
 		season = __addonargs__.get('season')[0]
 		month  = __addonargs__.get('month')[0]
 		game_center.MODE_archives_month(season, month)

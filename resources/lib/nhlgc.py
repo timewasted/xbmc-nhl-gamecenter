@@ -222,46 +222,66 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
-			if type(r_xml['result']['games']['game']) == type(dict()):
-				r_xml['result']['games']['game'] = [r_xml['result']['games']['game']]
-			for key, game in enumerate(r_xml['result']['games']['game']):
-				# Sanitize homeTeam and awayTeam.
-				if type(game['homeTeam']) == type(list()):
-					r_xml['result']['games']['game'][key]['homeTeam'] = game['homeTeam'][0]
-				if type(game['awayTeam']) == type(list()):
-					r_xml['result']['games']['game'][key]['awayTeam'] = game['awayTeam'][0]
-
-				# Add an entry for games that generally have a French stream.
-				r_xml['result']['games']['game'][key]['frenchStream'] = False
-				if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
-					r_xml['result']['games']['game'][key]['frenchStream'] = True
-
-				# Sanitize publishPoint.
-				publish_point = {
-					'home': None,
-					'away': None,
-					'french': None,
-				}
-				if 'program' not in game:
-					r_xml['result']['games']['game'][key]['program'] = {
-						'publishPoint': publish_point,
-					}
-				elif 'publishPoint' not in game['program']:
-					r_xml['result']['games']['game'][key]['program']['publishPoint'] = publish_point
-				else:
-					pub_point = game['program']['publishPoint']
-					pub_point = pub_point.replace('adaptive://', 'http://')
-					pub_point = pub_point.replace('_pc.mp4', '.mp4.m3u8')
-					publish_point['home'] = pub_point
-					publish_point['away'] = pub_point.replace('_h_', '_a_')
-					if r_xml['result']['games']['game'][key]['frenchStream'] == True:
-						pub_point = pub_point.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
-						pub_point = pub_point.replace('_h_', '_fr_')
-						publish_point['french'] = pub_point
-					r_xml['result']['games']['game'][key]['program']['publishPoint'] = publish_point
-			return r_xml['result']['games']['game']
+			games_list = r_xml['result']['games']['game']
+			if type(games_list) == type(dict()):
+				games_list = [games_list]
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
+
+		games = []
+		for game in games_list:
+			info = {
+				'season':      game['season'],
+				'season_type': game['type'],
+				'id':          game['id'].zfill(4),
+				'blocked':     'blocked' in game,
+				'live':        'isLive' in game,
+				'date':        game['date'],
+				'start_time':  game['gameTimeGMT'],
+				'end_time':    None,
+				'home_team':   game['homeTeam'],
+				'away_team':   game['awayTeam'],
+				'home_goals':  None,
+				'away_goals':  None,
+				'streams':     {
+					'home':   None,
+					'away':   None,
+					'french': None,
+				},
+			}
+
+			# Sanitize values that sometimes come out as lists.
+			if type(info['date']) == type(list()):
+				info['date'] = info['date'][0]
+			if type(info['home_team']) == type(list()):
+				info['home_team'] = info['home_team'][0]
+			if type(info['away_team']) == type(list()):
+				info['away_team'] = info['away_team'][0]
+
+			# Set the game end time.
+			if 'gameEndTimeGMT' in game:
+				info['end_time'] = game['gameEndTimeGMT']
+
+			# Set home and away goal counts.
+			if 'homeGoals' in game:
+				info['home_goals'] = game['homeGoals']
+			if 'awayGoals' in game:
+				info['away_goals'] = game['awayGoals']
+
+			# Set the streams.
+			if 'program' in game and 'publishPoint' in game['program']:
+				base_point = game['program']['publishPoint']
+				base_point = base_point.replace('adaptive://', 'http://')
+				base_point = base_point.replace('_pc.mp4', '.mp4.m3u8')
+				info['streams']['home'] = base_point
+				info['streams']['away'] = base_point.replace('_h_', '_a_')
+				if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+					base_point = base_point.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
+					base_point = base_point.replace('_h_', '_fr_')
+					info['streams']['french'] = base_point
+
+			games.append(info)
+		return games
 
 	def get_video_playlists(self, season, game_id, stream_type, perspective, retry=True):
 		fn_name = 'get_video_playlists'
@@ -457,40 +477,60 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
-			if type(r_xml['result']['games']['game']) == type(dict()):
-				r_xml['result']['games']['game'] = [r_xml['result']['games']['game']]
-			for key, game in enumerate(r_xml['result']['games']['game']):
-				if not 'publishPoint' in game['program']:
-					continue
-				orig_url, qs = game['program']['publishPoint'].split('?', 1)
-
-				if season >= 2012:
-					host = 'http://nlds150.cdnak.neulion.com/'
-					base_url = orig_url[orig_url.find('/nlds_vod/') + 1:]
-					url = host + base_url + '.m3u8'
-					french_url = url.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
-					french_url = french_url.replace('_h_', '_fr_')
-					french_url = french_url.replace('_whole_2', '_whole_1')
-				elif season >= 2010:
-					if season == 2011:
-						host = 'http://nhl.cdn.neulion.net/'
-					else:
-						host = 'http://nhl.cdnllnwnl.neulion.net/'
-					base_url = orig_url[orig_url.find('u/nhlmobile/'):]
-					base_url = base_url.replace('/pc/', '/ced/')
-					base_url = base_url.replace('.mp4', '')
-					url = host + base_url + '/v1/playlist.m3u8'
-					french_url = url.replace('/vod/nhl/', '/vod/nhlfr/')
-					french_url = french_url.replace('_h_', '_fr_')
-				r_xml['result']['games']['game'][key]['program']['publishPoint'] = {
-					'home': url + '?' + qs,
-					'away': url.replace('_h_', '_a_') + '?' + qs,
-					'french': None,
-				}
-				r_xml['result']['games']['game'][key]['frenchStream'] = False
-				if game['homeTeam'] in self.FRENCH_STREAM_TEAMS or game['awayTeam'] in self.FRENCH_STREAM_TEAMS:
-					r_xml['result']['games']['game'][key]['frenchStream'] = True
-					r_xml['result']['games']['game'][key]['program']['publishPoint']['french'] = french_url
-			return r_xml['result']['games']['game']
+			games_list = r_xml['result']['games']['game']
+			if type(games_list) == type(dict()):
+				games_list = [games_list]
 		except KeyError:
-			raise self.LogicError(fn_name, 'No archived games found.')
+			raise self.LogicError(fn_name, 'No games found.')
+
+		games = []
+		for game in games_list:
+			if 'program' not in game or 'publishPoint' not in game['program']:
+				continue
+			info = {
+				'season':      game['season'],
+				'season_type': game['type'],
+				'id':          game['id'].zfill(4),
+				'blocked':     'blocked' in game,
+				'live':        'isLive' in game,
+				'date':        game['date'],
+				'start_time':  None,
+				'end_time':    game['date'],
+				'home_team':   game['homeTeam'],
+				'away_team':   game['awayTeam'],
+				'home_goals':  game['homeGoals'],
+				'away_goals':  game['awayGoals'],
+				'streams':     {
+					'home':   None,
+					'away':   None,
+					'french': None,
+				},
+			}
+
+			# Set the streams.
+			orig_url, qs = game['program']['publishPoint'].split('?', 1)
+			if season >= 2012:
+				host = 'http://nlds150.cdnak.neulion.com/'
+				base_url = orig_url[orig_url.find('/nlds_vod/') + 1:]
+				url = host + base_url + '.m3u8'
+				french_url = url.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
+				french_url = french_url.replace('_h_', '_fr_')
+				french_url = french_url.replace('_whole_2', '_whole_1')
+			elif season >= 2010:
+				if season == 2011:
+					host = 'http://nhl.cdn.neulion.net/'
+				else:
+					host = 'http://nhl.cdnllnwnl.neulion.net/'
+				base_url = orig_url[orig_url.find('u/nhlmobile/'):]
+				base_url = base_url.replace('/pc/', '/ced/')
+				base_url = base_url.replace('.mp4', '')
+				url = host + base_url + '/v1/playlist.m3u8'
+				french_url = url.replace('/vod/nhl/', '/vod/nhlfr/')
+				french_url = french_url.replace('_h_', '_fr_')
+			info['streams']['home'] = url + '?' + qs
+			info['streams']['away'] = url.replace('_h_', '_a_') + '?' + qs
+			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+				info['streams']['french'] = french_url + '?' + qs
+
+			games.append(info)
+		return games
