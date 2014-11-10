@@ -387,16 +387,19 @@ class XBMC_NHL_GameCenter(object):
 # Addon menu system.
 ##
 
+cache_folder = True
 try:
 	game_center = XBMC_NHL_GameCenter()
 	mode = __addonargs__.get('mode', None)
 	if type(mode) == type(list()):
 		mode = mode[0]
 	if mode is None:
+		cache_folder = False
 		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
 		game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
 		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
 	elif mode == 'list':
+		cache_folder = False
 		today_only = __addonargs__.get('type')[0] == 'today'
 		game_center.MODE_list(today_only)
 	elif mode == 'view_options':
@@ -418,4 +421,4 @@ try:
 except RuntimeError:
 	pass
 
-xbmcplugin.endOfDirectory(__addonhandle__)
+xbmcplugin.endOfDirectory(__addonhandle__, cacheToDisc=cache_folder)
