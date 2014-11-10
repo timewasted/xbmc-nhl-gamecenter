@@ -45,7 +45,7 @@ class XBMC_NHL_GameCenter(object):
 
 	MATCHUP_IMAGES_URL = 'http://nhl.cdn.neulion.net/u/nhlgc_roku/images/HD/%s_at_%s.jpg'
 
-	def __init__(self):
+	def __init__(self, skip_networking=False):
 		username    = __addon__.getSetting('gc_username')
 		password    = __addon__.getSetting('gc_password')
 		rogerslogin = __addon__.getSetting('gc_rogerslogin') == 'true'
@@ -65,7 +65,7 @@ class XBMC_NHL_GameCenter(object):
 				proxy_config['auth'] = None
 
 		try:
-			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, __cookiesfile__)
+			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, __cookiesfile__, skip_networking)
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
 			raise RuntimeError(error)
@@ -389,10 +389,14 @@ class XBMC_NHL_GameCenter(object):
 
 cache_folder = True
 try:
-	game_center = XBMC_NHL_GameCenter()
 	mode = __addonargs__.get('mode', None)
 	if type(mode) == type(list()):
 		mode = mode[0]
+	skip_networking = False
+	if mode is None or mode == 'view_options':
+		skip_networking = True
+	game_center = XBMC_NHL_GameCenter(skip_networking)
+
 	if mode is None:
 		cache_folder = False
 		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
