@@ -7,7 +7,7 @@ except ImportError:
 # http://mail.python.org/pipermail/python-list/2009-June/540579.html
 import _strptime
 from datetime import datetime
-from dateutil import parser, tz
+from dateutil import tz
 from resources.lib.nhlgc import nhlgc
 
 __addon__       = xbmcaddon.Addon()
@@ -175,10 +175,9 @@ class XBMC_NHL_GameCenter(object):
 		# Get the required dates and times.
 		current_time_utc = datetime.utcnow().replace(tzinfo=tz.tzutc())
 		if game['start_time'] is not None:
-			start_time_gmt = parser.parse(game['start_time']).replace(tzinfo=tz.tzutc())
-			start_time_local = start_time_gmt.astimezone(tz.tzlocal()).strftime(game_time_format)
+			start_time_local = game['start_time'].astimezone(tz.tzlocal()).strftime(game_time_format)
 		else:
-			start_time_local = parser.parse(game['date']).strftime(xbmc.getRegion('dateshort'))
+			start_time_local = game['date'].strftime(xbmc.getRegion('dateshort'))
 
 		# Start with the basic title of "Team vs Team".
 		lang_id = 30027
@@ -194,14 +193,13 @@ class XBMC_NHL_GameCenter(object):
 		else:
 			game_ended = False
 			if game['end_time'] is not None:
-				end_time_gmt = parser.parse(game['end_time']).replace(tzinfo=tz.tzutc())
-				if current_time_utc >= end_time_gmt:
+				if current_time_utc >= game['end_time']:
 					# Game has ended.
 					game_ended = True
-					time_delta = current_time_utc - end_time_gmt
+					time_delta = current_time_utc - game['end_time']
 					if time_delta.days < 1:
 						title = __language__(30024) + ' ' + title
-			if not game_ended and game['live'] and current_time_utc >= start_time_gmt:
+			if not game_ended and game['live'] and current_time_utc >= game['start_time']:
 				# Game is in progress.
 				title = __language__(30023) + ' ' + title
 

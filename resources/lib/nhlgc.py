@@ -10,6 +10,7 @@ try:
 except ImportError:
 	import json
 from datetime import date
+from dateutil import parser, tz
 
 class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
@@ -238,7 +239,7 @@ class nhlgc(object):
 				'blocked':     'blocked' in game,
 				'live':        'isLive' in game,
 				'date':        game['date'],
-				'start_time':  game['gameTimeGMT'],
+				'start_time':  parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc()),
 				'end_time':    None,
 				'home_team':   game['homeTeam'],
 				'away_team':   game['awayTeam'],
@@ -261,7 +262,7 @@ class nhlgc(object):
 
 			# Set the game end time.
 			if 'gameEndTimeGMT' in game:
-				info['end_time'] = game['gameEndTimeGMT']
+				info['end_time'] = parser.parse(game['gameEndTimeGMT']).replace(tzinfo=tz.tzutc())
 
 			# Set home and away goal counts.
 			if 'homeGoals' in game:
@@ -494,9 +495,9 @@ class nhlgc(object):
 				'id':          game['id'].zfill(4),
 				'blocked':     'blocked' in game,
 				'live':        'isLive' in game,
-				'date':        game['date'],
+				'date':        parser.parse(game['date']).replace(tzinfo=tz.tzutc()),
 				'start_time':  None,
-				'end_time':    game['date'],
+				'end_time':    parser.parse(game['date']).replace(tzinfo=tz.tzutc()),
 				'home_team':   game['homeTeam'],
 				'away_team':   game['awayTeam'],
 				'home_goals':  game['homeGoals'],
