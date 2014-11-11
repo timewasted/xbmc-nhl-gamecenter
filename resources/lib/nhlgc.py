@@ -92,6 +92,10 @@ class nhlgc(object):
 
 	class NetworkError(Exception):
 		def __init__(self, fn_name, message, status_code=-1):
+			if type(message) is requests.exceptions.ConnectionError:
+				message = message.args[0]
+				if type(message) is requests.packages.urllib3.exceptions.MaxRetryError:
+					message = message.reason
 			self.fn_name = str(fn_name)
 			self.message = str(message)
 			self.status_code = int(status_code)
