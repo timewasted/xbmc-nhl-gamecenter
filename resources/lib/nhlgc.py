@@ -56,7 +56,9 @@ class nhlgc(object):
 		self.username = username
 		self.password = password
 		self.rogers_login = rogers_login
-		self.hls_server = 'http://%s:%d' % (hls_server['host'], hls_server['port'])
+		self.hls_server = None
+		if hls_server is not None:
+			self.hls_server = 'http://%s:%d' % (hls_server['host'], hls_server['port'])
 
 		cookiejar = cookielib.LWPCookieJar(cookies_file)
 		try:
@@ -394,7 +396,7 @@ class nhlgc(object):
 				for cookie in r.cookies:
 					protocol_headers['Cookie'] += '%s=%s; ' % (cookie.name, cookie.value)
 				protocol_headers['Cookie'] += 'nlqptid=' + m3u8_url.split('?', 1)[1]
-			if from_start and game['start_time'] is not None:
+			if from_start and game['start_time'] is not None and self.hls_server is not None:
 				m3u8_url = self.hls_server + \
 					'/playlist?url=' + urllib.quote_plus(m3u8_url) + \
 					'&start_at=' + game['start_time'].strftime('%Y%m%d%H%M%S')

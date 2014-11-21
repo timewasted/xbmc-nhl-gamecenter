@@ -64,10 +64,17 @@ class XBMC_NHL_GameCenter(object):
 			if proxy_config['auth']['username'] == '' and proxy_config['auth']['password'] == '':
 				proxy_config['auth'] = None
 
-		hls_server = {
-			'host': __addon__.getSetting('hls_server_host'),
-			'port': int(__addon__.getSetting('hls_server_port')),
-		}
+		hls_server = None
+		try:
+			self.has_hls_proxy = False
+			hls_proxy = xbmcaddon.Addon('service.nhl-hls-proxy')
+			hls_server = {
+				'host': hls_proxy.getSetting('hls_listen_host'),
+				'port': int(hls_proxy.getSetting('hls_listen_port')),
+			}
+			self.has_hls_proxy = True
+		except RuntimeError:
+			pass
 
 		try:
 			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__, skip_networking)
@@ -388,7 +395,7 @@ class XBMC_NHL_GameCenter(object):
 						url=self.game_center.get_authorized_stream_url(game, stream_url, False),
 						game=game,
 					)
-					if from_start == True:
+					if self.has_hls_proxy and from_start == True:
 						self.add_item(
 							label=label + __language__(30063),
 							url=self.game_center.get_authorized_stream_url(game, stream_url, True),
