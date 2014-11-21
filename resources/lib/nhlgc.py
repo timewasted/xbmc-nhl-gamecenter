@@ -42,7 +42,7 @@ class nhlgc(object):
 	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
 	MIN_ARCHIVED_SEASON = 2010
 
-	def __init__(self, username, password, rogers_login, proxy_config, cookies_file, skip_networking=False):
+	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file, skip_networking=False):
 		self.urls = {
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
 			'login':            'https://gamecenter.nhl.com/nhlgc/secure/login',
@@ -56,6 +56,9 @@ class nhlgc(object):
 		self.username = username
 		self.password = password
 		self.rogers_login = rogers_login
+		self.hls_server = None
+		if hls_server is not None:
+			self.hls_server = 'http://%s:%d' % (hls_server['host'], hls_server['port'])
 
 		cookiejar = cookielib.LWPCookieJar(cookies_file)
 		try:
@@ -373,7 +376,7 @@ class nhlgc(object):
 
 		return highlights_dict
 
-	def get_authorized_stream_url(self, m3u8_url):
+	def get_authorized_stream_url(self, game, m3u8_url, from_start=False):
 		fn_name = 'get_authorized_stream_url'
 
 		try:
@@ -381,18 +384,26 @@ class nhlgc(object):
 			if r.status_code != 200:
 				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 			m3u8_obj = m3u8.loads(r.text)
+			protocol_headers = {}
 			if m3u8_obj.key is not None:
 				r = requests.get(m3u8_obj.key.uri, cookies=r.cookies)
 				if r.status_code != 200:
 					raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-				headers = {
+				protocol_headers = {
 					'Cookie': '',
 					'User-Agent': self.DEFAULT_USER_AGENT,
 				}
 				for cookie in r.cookies:
-					headers['Cookie'] += '%s=%s; ' % (cookie.name, cookie.value)
-				headers['Cookie'] += 'nlqptid=' + m3u8_url.split('?', 1)[1]
-				m3u8_url += '|' + urllib.urlencode(headers)
+					protocol_headers['Cookie'] += '%s=%s; ' % (cookie.name, cookie.value)
+				protocol_headers['Cookie'] += 'nlqptid=' + m3u8_url.split('?', 1)[1]
+			if from_start and game['start_time'] is not None and self.hls_server is not None:
+				m3u8_url = self.hls_server + \
+					'/playlist?url=' + urllib.quote_plus(m3u8_url) + \
+					'&start_at=' + game['start_time'].strftime('%Y%m%d%H%M%S')
+				if len(protocol_headers) > 0:
+					m3u8_url += '&headers=' + urllib.quote(urllib.urlencode(protocol_headers))
+			elif len(protocol_headers) > 0:
+				m3u8_url += '|' + urllib.urlencode(protocol_headers)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
