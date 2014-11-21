@@ -11,7 +11,7 @@
 	<extension point="xbmc.service" library="service.py" start="login"/>
 	<extension point="xbmc.addon.metadata">
 		<summary lang="en">NHL GameCenter (development version)</summary>
-		<description lang="en">Watch NHL GameCenter videos in the highest possible quality.[CR]Supports watching live and recent games, as well as several years of archived games. Whether you want to watch the full game, the condensed version, or just the highlights, this has you covered.</description>
+		<description lang="en">THIS IS A DEVELOPMENT VERSION! UNLESS YOU KNOW WHAT YOU ARE GETTING YOURSELF INTO, YOU PROBABLY DO NOT WANT THIS VERSION![CR]Watch NHL GameCenter videos in the highest possible quality.[CR]Supports watching live and recent games, as well as several years of archived games. Whether you want to watch the full game, the condensed version, or just the highlights, this has you covered.</description>
 		<disclaimer lang="en">This plugin requires a valid subscription to NHL GameCenter, and is subject to local blackouts imposed by the NHL.[CR]THIS PLUGIN IS COMPLETELY UNOFFICIAL AND IS NOT ENDORSED BY THE NHL OR ANYONE ASSOCIATED WITH THE NHL.</disclaimer>
 		<language>en</language>
 		<platform>all</platform>
