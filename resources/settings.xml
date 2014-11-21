@@ -26,4 +26,11 @@
 		<setting id="proxy_username" type="text" label="30054" default="" enable="eq(-5,true)"/>
 		<setting id="proxy_password" type="text" label="30055" default="" option="hidden" enable="eq(-6,true)"/>
 	</category>
+
+	<!-- HLS Server Settings -->
+	<category label="HLS Server">
+		<setting type="lsep" label="You shouldn't need to adjust the following values. Changes require a restart."/>
+		<setting id="hls_server_host" type="text" label="30052" default="127.0.0.1"/>
+		<setting id="hls_server_port" type="number" label="30053" default="54321"/>
+	</category>
 </settings>
