@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.xbmc-nhl-gamecenter-dev" name="NHL GameCenter (dev)" version="0.0.0" provider-name="Timewasted">
+<addon id="plugin.video.xbmc-nhl-gamecenter-dev" name="NHL GameCenter (dev)" version="0.0.2" provider-name="Timewasted">
 	<requires>
 		<import addon="xbmc.python" version="2.14.0"/>
 		<import addon="script.module.requests" version="2.3.0"/>
@@ -8,7 +8,6 @@
 	<extension point="xbmc.python.pluginsource" library="main.py">
 		<provides>video</provides>
 	</extension>
-	<extension point="xbmc.service" library="service.py" start="login"/>
 	<extension point="xbmc.addon.metadata">
 		<summary lang="en">NHL GameCenter (development version)</summary>
 		<description lang="en">THIS IS A DEVELOPMENT VERSION! UNLESS YOU KNOW WHAT YOU ARE GETTING YOURSELF INTO, YOU PROBABLY DO NOT WANT THIS VERSION![CR]Watch NHL GameCenter videos in the highest possible quality.[CR]Supports watching live and recent games, as well as several years of archived games. Whether you want to watch the full game, the condensed version, or just the highlights, this has you covered.</description>
