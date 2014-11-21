@@ -64,8 +64,13 @@ class XBMC_NHL_GameCenter(object):
 			if proxy_config['auth']['username'] == '' and proxy_config['auth']['password'] == '':
 				proxy_config['auth'] = None
 
+		hls_server = {
+			'host': __addon__.getSetting('hls_server_host'),
+			'port': int(__addon__.getSetting('hls_server_port')),
+		}
+
 		try:
-			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, __cookiesfile__, skip_networking)
+			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__, skip_networking)
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
 			raise RuntimeError(error)
@@ -363,9 +368,12 @@ class XBMC_NHL_GameCenter(object):
 		use_bitrate = None
 		for label, stream_key, perspective in perspectives:
 			try:
+				from_start = False
 				if stream_type == self.game_center.STREAM_TYPE_LIVE and game['streams'][stream_key] is not None:
 					playlists = self.game_center.get_playlists_from_m3u8_url(game['streams'][stream_key])
 				else:
+					if stream_type == self.game_center.STREAM_TYPE_LIVE:
+						from_start = True
 					playlists = self.game_center.get_video_playlists(game['season'], game['id'], stream_type, perspective)
 
 				if len(playlists) == 1:
@@ -375,7 +383,17 @@ class XBMC_NHL_GameCenter(object):
 						use_bitrate = self.select_bitrate(playlists)
 					stream_url = playlists[use_bitrate]
 				if stream_url not in seen_urls:
-					self.add_item(label=label, url=self.game_center.get_authorized_stream_url(stream_url), game=game)
+					self.add_item(
+						label=label,
+						url=self.game_center.get_authorized_stream_url(game, stream_url, False),
+						game=game,
+					)
+					if from_start == True:
+						self.add_item(
+							label=label + __language__(30063),
+							url=self.game_center.get_authorized_stream_url(game, stream_url, True),
+							game=game,
+						)
 					seen_urls[stream_url] = True
 			except nhlgc.NetworkError as error:
 				if error.status_code != 404:
