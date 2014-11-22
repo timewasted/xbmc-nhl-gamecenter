@@ -20,9 +20,11 @@ class nhlgc(object):
 	STREAM_TYPE_CONDENSED  = 'condensed'
 	STREAM_TYPE_HIGHLIGHTS = 'highlights'
 
-	PERSPECTIVE_HOME = '2'
-	PERSPECTIVE_AWAY = '4'
-	PERSPECTIVE_FRENCH = '8'
+	PERSPECTIVE_HOME        = str(1 << 1)	# '2'
+	PERSPECTIVE_AWAY        = str(1 << 2)	# '4'
+	PERSPECTIVE_FRENCH      = str(1 << 3)	# '8'
+	PERSPECTIVE_HOME_GOALIE = str(1 << 6)	# '64'
+	PERSPECTIVE_AWAY_GOALIE = str(1 << 7)	# '128'
 
 	PRESEASON  = '01'
 	REGSEASON  = '02'
