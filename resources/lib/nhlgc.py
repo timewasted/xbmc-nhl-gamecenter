@@ -49,6 +49,7 @@ class nhlgc(object):
 			'scoreboard':       'http://live.nhle.com/GameData/GCScoreboard/',
 			'login':            'https://gamecenter.nhl.com/nhlgc/secure/login',
 			'console':          'https://gamecenter.nhl.com/nhlgc/servlets/simpleconsole',
+			'game-info':        'https://gamecenter.nhl.com/nhlgc/servlets/game',
 			'games-list':       'https://gamecenter.nhl.com/nhlgc/servlets/games',
 			'publish-point':    'https://gamecenter.nhl.com/nhlgc/servlets/publishpoint',
 			'archived-seasons': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
@@ -204,6 +205,72 @@ class nhlgc(object):
 			game_id = str(details['id'])
 			scoreboard_dict[game_id[len(game_id) - 4:]] = details
 		return scoreboard_dict
+
+	def get_game_info(self, season, game_id, season_type):
+		fn_name = 'get_game_info'
+
+		params = {
+			'app': 'true',
+			'isFlex': 'true',
+			'season': season,
+			'gid': game_id,
+			'type': season_type,
+		}
+
+		try:
+			r = self.session.post(self.urls['game-info'], data=params)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		r_xml = xmltodict.parse(r.text)
+
+		info = {}
+		try:
+			game = r_xml['result']['game']
+			info = {
+				'season':      game['season'],
+				'season_type': game['type'],
+				'id':          game['gid'].zfill(4),
+				'blocked':     'noAccess' in game,
+				# FIXME: I'm not sure this is a good check for live.
+				'live':        'gameState' in game and game['result'] is None,
+				'date':        parser.parse(game['date']).replace(tzinfo=tz.tzutc()),
+				'start_time':  parser.parse(game['gameTimeGMT']).replace(tzinfo=tz.tzutc()),
+				'end_time':    None,
+				'home_team':   game['homeTeam'],
+				'away_team':   game['awayTeam'],
+				'home_goals':  game['homeGoals'],
+				'away_goals':  game['awayGoals'],
+				'game_state':  None,
+				# game['result'] can have the following values:
+				# 'F':  game ended during regulation play
+				# 'OT': game ended during overtime
+				# 'SO': game ended in a shootout
+				'result':      game['result'],
+				'streams':     {
+					'home':   None,
+					'away':   None,
+					'french': None,
+				},
+			}
+
+			# Set the game end time.
+			if 'gameEndTimeGMT' in game:
+				info['end_time'] = parser.parse(game['gameEndTimeGMT']).replace(tzinfo=tz.tzutc())
+
+			# Set the game state.
+			# FIXME: Determine the valid values of gameState.
+			# '1': in progress?
+			# '2': recently ended?
+			# '3': timed blackout expired?
+			if 'gameState' in game:
+				info['game_state'] = game['gameState']
+		except KeyError:
+			raise self.LogicError(fn_name, 'Game not found.')
+		return info
 
 	def get_games_list(self, today_only=True, retry=True):
 		fn_name = 'get_games_list'
