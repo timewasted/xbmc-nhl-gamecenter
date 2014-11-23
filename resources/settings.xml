@@ -12,7 +12,7 @@
 	<!-- UI Settings -->
 	<category label="30002">
 		<setting id="team_names" type="select" label="30017" lvalues="30018|30019|30020|30021" default="0"/>
-		<setting id="at_instead_of_vs" type="bool" label="30033" default="false"/>
+		<setting id="at_instead_of_vs" type="bool" label="30033" default="true"/>
 		<setting id="show_scores" type="bool" label="30034" default="false"/>
 	</category>
 
