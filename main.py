@@ -72,8 +72,15 @@ class XBMC_NHL_GameCenter(object):
 				'host': hls_proxy.getSetting('hls_listen_host'),
 				'port': int(hls_proxy.getSetting('hls_listen_port')),
 			}
+			urllib.urlopen('http://%s:%d' % (hls_server['host'], hls_server['port']))
 			self.has_hls_proxy = True
 		except RuntimeError:
+			# Failed to get the handle for the add-on, so it probably hasn't
+			# been enabled.
+			pass
+		except IOError:
+			# Failed to connect to the proxy server, so it either hasn't been
+			# enabled, or it failed to start up.
 			pass
 
 		try:
