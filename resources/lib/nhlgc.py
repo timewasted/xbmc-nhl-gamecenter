@@ -301,7 +301,7 @@ class nhlgc(object):
 
 		try:
 			games_list = r_xml['result']['games']['game']
-			if type(games_list) == type(dict()):
+			if not isinstance(games_list, list):
 				games_list = [games_list]
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
@@ -329,11 +329,11 @@ class nhlgc(object):
 			}
 
 			# Sanitize values that sometimes come out as lists.
-			if type(info['date']) == type(list()):
+			if isinstance(info['date'], list):
 				info['date'] = info['date'][0]
-			if type(info['home_team']) == type(list()):
+			if isinstance(info['home_team'], list):
 				info['home_team'] = info['home_team'][0]
-			if type(info['away_team']) == type(list()):
+			if isinstance(info['away_team'], list):
 				info['away_team'] = info['away_team'][0]
 
 			# Set the game end time.
@@ -564,7 +564,7 @@ class nhlgc(object):
 
 		try:
 			games_list = r_xml['result']['games']['game']
-			if type(games_list) == type(dict()):
+			if not isinstance(games_list, list):
 				games_list = [games_list]
 		except KeyError:
 			raise self.LogicError(fn_name, 'No games found.')
