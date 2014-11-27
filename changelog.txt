@@ -1,3 +1,8 @@
+v0.0.20 (November 26th, 2014)
+- Add support for watching live games from the start of the game. This feature works best in Helix. See the forum thread for information on the limitations/shortcomings of this feature.
+- Change default display from 'Team vs Team' to 'Team at Team' to match the matchup images
+- Another attempt to fix issues that crop up when there's only a single game for the night
+
 v0.0.19 (November 10th, 2014)
 - Large code cleanup with limited user facing changes
 - Some aspects of the menu system should be quicker
