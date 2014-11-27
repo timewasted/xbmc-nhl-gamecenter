@@ -1,3 +1,6 @@
+v0.0.21 (November 26th, 2014)
+- No changes, just a new version to force an update to fix an issue with my repository manifest file
+
 v0.0.20 (November 26th, 2014)
 - Add support for watching live games from the start of the game. This feature works best in Helix. See the forum thread for information on the limitations/shortcomings of this feature.
 - Change default display from 'Team vs Team' to 'Team at Team' to match the matchup images
