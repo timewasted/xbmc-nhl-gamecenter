@@ -11,7 +11,7 @@ Notable features:
 -----------------
 
 * Watch the following game types in high quality (up to 5000kbps and 60fps):
-    - Live games
+    - Live games (including the ability to rewind a live game to the beginning of the game)
     - Recently live and upcoming games
     - Archived games
     - Condensed games
@@ -35,15 +35,10 @@ Installation:
 
 [Download the repository](https://github.com/timewasted/repository.timewasted-files/raw/master/repository.timewasted.zip), and then use the *Install from zip file* option for installing add-ons. Install *NHL GameCenter* from the Timewasted repository.
 
-Requirements:
--------------
+Limitations:
+------------
 
-The following packages are required for correct operation:
-
-* [Requests v2.3.0](http://mirrors.xbmc.org/addons/frodo/script.module.requests/)
-* [XMLToDict v0.9.0](http://mirrors.xbmc.org/addons/frodo/script.module.xmltodict/)
-
-These should be installed automatically, but they are also included here for reference.
+Rewinding a live game to the beginning of the game has rough edges that can't easily (if at all) be worked around within the context of a plugin for Kodi. First, skipping around in a rewound stream works best in Helix due to the updated version of ffmpeg. It will work in Gotham, but there's no guarantee that you'll be able to skip around in the stream. Second, the rewound stream is presented as a playlist that is 4+ hours long, regardless of the actual game status. There is no indication of when you will catch up to the live stream, and if/when you do, you will simply be kicked back to the menu system.
 
 License:
 --------
