@@ -375,7 +375,7 @@ class XBMC_NHL_GameCenter(object):
 			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
 			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
 		]
-		if game['streams']['french'] is not None:
+		if game['french_game'] == True:
 			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
 
 		seen_urls = {}

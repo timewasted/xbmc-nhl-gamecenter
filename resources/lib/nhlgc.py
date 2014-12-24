@@ -250,6 +250,7 @@ class nhlgc(object):
 				# 'OT': game ended during overtime
 				# 'SO': game ended in a shootout
 				'result':      game['result'],
+				'french_game': False,
 				'streams':     {
 					'home':   None,
 					'away':   None,
@@ -268,6 +269,10 @@ class nhlgc(object):
 			# '3': timed blackout expired?
 			if 'gameState' in game:
 				info['game_state'] = game['gameState']
+
+			# Flag as a French game.
+			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+				info['french_game'] = True
 		except KeyError:
 			raise self.LogicError(fn_name, 'Game not found.')
 		return info
@@ -321,6 +326,7 @@ class nhlgc(object):
 				'away_team':   game['awayTeam'],
 				'home_goals':  None,
 				'away_goals':  None,
+				'french_game': False,
 				'streams':     {
 					'home':   None,
 					'away':   None,
@@ -346,6 +352,10 @@ class nhlgc(object):
 			if 'awayGoals' in game:
 				info['away_goals'] = game['awayGoals']
 
+			# Flag as a French game.
+			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+				info['french_game'] = True
+
 			# Set the streams.
 			if 'program' in game and 'publishPoint' in game['program']:
 				base_point = game['program']['publishPoint']
@@ -353,7 +363,7 @@ class nhlgc(object):
 				base_point = base_point.replace('_pc.mp4', '.mp4.m3u8')
 				info['streams']['home'] = base_point
 				info['streams']['away'] = base_point.replace('_h_', '_a_')
-				if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+				if info['french_game'] == True:
 					base_point = base_point.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
 					base_point = base_point.replace('_h_', '_fr_')
 					info['streams']['french'] = base_point
@@ -586,12 +596,17 @@ class nhlgc(object):
 				'away_team':   game['awayTeam'],
 				'home_goals':  game['homeGoals'],
 				'away_goals':  game['awayGoals'],
+				'french_game': False,
 				'streams':     {
 					'home':   None,
 					'away':   None,
 					'french': None,
 				},
 			}
+
+			# Flag as a French game.
+			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+				info['french_game'] = True
 
 			# Set the streams.
 			orig_url, qs = game['program']['publishPoint'].split('?', 1)
@@ -615,7 +630,7 @@ class nhlgc(object):
 				french_url = french_url.replace('_h_', '_fr_')
 			info['streams']['home'] = url + '?' + qs
 			info['streams']['away'] = url.replace('_h_', '_a_') + '?' + qs
-			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
+			if info['french_game'] == True:
 				info['streams']['french'] = french_url + '?' + qs
 
 			games.append(info)

@@ -1,3 +1,6 @@
+v0.0.22 (December 23rd, 2014)
+- Fix for French streams not being available for games that should have it available
+
 v0.0.21 (November 26th, 2014)
 - No changes, just a new version to force an update to fix an issue with my repository manifest file
 
