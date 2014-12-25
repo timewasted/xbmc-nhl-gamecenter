@@ -305,7 +305,10 @@ class nhlgc(object):
 			raise self.LogicError(fn_name, 'Access denied.')
 
 		try:
-			games_list = r_xml['result']['games']['game']
+			games_list = r_xml['result']['games']
+			if games_list is None:
+				return []
+			games_list = games_list['game']
 			if not isinstance(games_list, list):
 				games_list = [games_list]
 		except KeyError:
