@@ -107,6 +107,7 @@ class XBMC_NHL_GameCenter(object):
 			self.team_info_key = 'city'
 		self.show_scores = __addon__.getSetting('show_scores') == 'true'
 		self.at_instead_of_vs = __addon__.getSetting('at_instead_of_vs') == 'true'
+		self.show_stream_duration = __addon__.getSetting('show_stream_duration') == 'true'
 
 	def parse_teams_json(self, teams_file):
 		with open(teams_file) as file_obj:
@@ -127,10 +128,11 @@ class XBMC_NHL_GameCenter(object):
 #				self.team_info[game['away_team']]['full-name'],
 #			],
 			'title': self.game_title(game, None)[0],
+			'duration': 0,
 		}
 		if len(title_suffix) > 0:
 			info['title'] += ' ' + title_suffix
-		if game['start_time'] is not None:
+		if self.show_stream_duration and game['start_time'] is not None:
 			info['aired'] = game['start_time'].astimezone(tz.tzlocal()).strftime('%Y-%m-%d')
 			if game['end_time'] is not None:
 				# FIXME: This is both correct and incorrect at the same time.
