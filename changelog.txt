@@ -1,3 +1,8 @@
+v0.0.23 (April 12th, 2015)
+- Fix the script errors when there are no games for the day.
+- Add a setting for showing the stream duration for games, which defaults to false (stream durations are hidden). This currently only affects the games list, and not the in-stream UI.
+- Update the fanart to the awesome image from comfox1: http://forum.kodi.tv/showthread.php?tid=207178&pid=1960154#pid1960154
+
 v0.0.22 (December 23rd, 2014)
 - Fix for French streams not being available for games that should have it available
 
