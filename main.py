@@ -364,7 +364,7 @@ class XBMC_NHL_GameCenter(object):
 		}
 
 		if stream_type == self.game_center.STREAM_TYPE_HIGHLIGHTS:
-			highlights = self.game_center.get_game_highlights(game['season'], game['id'])
+			highlights = self.game_center.get_game_highlights(game['season'], game['id'], game['season_type'])
 			if 'home' in highlights and 'publishPoint' in highlights['home']:
 				self.add_item(label=__language__(30025), url=highlights['home']['publishPoint'], game=game)
 			if 'away' in highlights and 'publishPoint' in highlights['away']:
@@ -390,7 +390,7 @@ class XBMC_NHL_GameCenter(object):
 				else:
 					if stream_type == self.game_center.STREAM_TYPE_LIVE:
 						from_start = True
-					playlists = self.game_center.get_video_playlists(game['season'], game['id'], stream_type, perspective)
+					playlists = self.game_center.get_video_playlists(game['season'], game['id'], game['season_type'], stream_type, perspective)
 
 				if len(playlists) == 1:
 					stream_url = playlists.values()[0]

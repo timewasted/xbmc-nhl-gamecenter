@@ -374,15 +374,14 @@ class nhlgc(object):
 			games.append(info)
 		return games
 
-	def get_video_playlists(self, season, game_id, stream_type, perspective, retry=True):
+	def get_video_playlists(self, season, game_id, season_type, stream_type, perspective, retry=True):
 		fn_name = 'get_video_playlists'
 
 		params = {
 			'type': 'game',
 			'gs': stream_type,
 			'ft': perspective,
-			# FIXME: self.REGSEASON shouldn't be hardcoded.
-			'id': season + self.REGSEASON + game_id.zfill(4),
+			'id': season + season_type.zfill(2) + game_id.zfill(4),
 			'plid': binascii.hexlify(os.urandom(16)),
 		}
 		try:
@@ -425,11 +424,10 @@ class nhlgc(object):
 
 		return playlists
 
-	def get_game_highlights(self, season, game_id):
+	def get_game_highlights(self, season, game_id, season_type):
 		fn_name = 'get_game_highlights'
 
-		# FIXME: self.REGSEASON shouldn't be hardcoded.
-		base_id = season + self.REGSEASON + game_id.zfill(4)
+		base_id = season + season_type.zfill(2) + game_id.zfill(4)
 		home_suffix, away_suffix, french_suffix = '-X-h', '-X-a', '-X-fr'
 		params = {
 			'format': 'json',

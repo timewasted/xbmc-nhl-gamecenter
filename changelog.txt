@@ -1,3 +1,6 @@
+v0.0.24 (April 15th, 2015)
+- Fix for getting regular season games when trying to watch post season games.
+
 v0.0.23 (April 12th, 2015)
 - Fix the script errors when there are no games for the day.
 - Add a setting for showing the stream duration for games, which defaults to false (stream durations are hidden). This currently only affects the games list, and not the in-stream UI.
