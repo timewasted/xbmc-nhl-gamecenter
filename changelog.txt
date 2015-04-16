@@ -1,3 +1,6 @@
+v0.0.25 (April 15th, 2015)
+- Fix a script error caused by my previous fix.
+
 v0.0.24 (April 15th, 2015)
 - Fix for getting regular season games when trying to watch post season games.
 

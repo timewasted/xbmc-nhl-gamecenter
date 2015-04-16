@@ -393,7 +393,7 @@ class nhlgc(object):
 		if r.status_code != 200:
 			if r.status_code == 401 and retry == True:
 				self.login(self.username, self.password, self.rogers_login)
-				return self.get_video_playlists(season, game_id, stream_type, perspective, retry=False)
+				return self.get_video_playlists(season, game_id, season_type, stream_type, perspective, retry=False)
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_xml = xmltodict.parse(r.text)
 
