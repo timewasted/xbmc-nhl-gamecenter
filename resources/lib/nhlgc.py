@@ -517,7 +517,7 @@ class nhlgc(object):
 		archives = []
 		try:
 			for archive_season in r_xml['result']['season']:
-				if int(archive_season['@id']) < self.MIN_ARCHIVED_SEASON:
+				if int(archive_season['@id']) < self.MIN_ARCHIVED_SEASON or not 'g' in archive_season:
 					continue
 				season = {}
 				season['season'] = archive_season['@id']
