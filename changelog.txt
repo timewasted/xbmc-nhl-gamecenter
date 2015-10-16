@@ -1,5 +1,5 @@
 v0.0.28 (October 16th, 2015)
-- Prepare for submitting to the official Kodi add-on repository by changing the add-on ID to "plugin.video.nhl-gamecenter-live".
+- Prepare for submitting to the official Kodi add-on repository by changing the add-on name to "NHL GameCenter Live" and ID to "plugin.video.nhl-gamecenter-live".
 
 v0.0.27 (October 12th, 2015)
 - Fix archived games listing for new seasons.
