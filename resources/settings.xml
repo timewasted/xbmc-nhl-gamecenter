@@ -20,7 +20,7 @@
 	<!-- Proxy Settings -->
 	<category label="30049">
 		<setting id="proxy_enabled" type="bool" label="30050" default="false"/>
-		<setting id="proxy_scheme" type="select" label="30051" lvalues="30056|30057" default="http" enable="eq(-1,true)"/>
+		<setting id="proxy_scheme" type="select" label="30051" values="http|https" default="http" enable="eq(-1,true)"/>
 		<setting id="proxy_host" type="text" label="30052" default="" enable="eq(-2,true)"/>
 		<setting id="proxy_port" type="number" label="30053" default="" enable="eq(-3,true)"/>
 		<setting type="lsep" label="30058"/>
