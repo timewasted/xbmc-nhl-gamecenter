@@ -11,6 +11,7 @@ except ImportError:
 	import json
 from datetime import date
 from dateutil import parser, tz
+from TLSAdapter import TLSAdapter
 
 class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (iPad; CPU OS 8_1 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12B410 Safari/600.1.4'
@@ -69,6 +70,7 @@ class nhlgc(object):
 		except IOError:
 			pass
 		self.session = requests.Session()
+		self.session.mount('https://', TLSAdapter())
 		self.session.cookies = cookiejar
 		self.session.headers.update({'User-Agent': self.DEFAULT_USER_AGENT})
 
