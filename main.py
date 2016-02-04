@@ -191,17 +191,27 @@ class XBMC_NHL_GameCenter(object):
 			listitem=item,
 		)
 
-	def select_bitrate(self, streams):
+	def select_bitrate(self, streams, prev_bitrate=None, adjust_bitrate=False):
 		sorted_streams = sorted(streams, key=int, reverse=True)
 
 		# Pick the best quality stream.
 		if self.preferred_bitrate == 1:
 			return sorted_streams[0]
+
+		# Handle setting prev_bitrate for "fuzzy" matching.
+		if prev_bitrate is None:
+			prev_bitrate = int(self.SETTINGS_BITRATES[self.preferred_bitrate - 2])
+		else:
+			prev_bitrate = int(prev_bitrate)
+			if adjust_bitrate is True:
+				prev_bitrate *= 1.10
+
 		# Pick a specific stream quality.
-		if self.preferred_bitrate > 1:
+		if (self.preferred_bitrate == 0 and prev_bitrate is not None) or self.preferred_bitrate > 1:
 			for bitrate in sorted_streams:
-				if bitrate == self.SETTINGS_BITRATES[self.preferred_bitrate]:
+				if int(bitrate) <= prev_bitrate:
 					return bitrate
+
 		# Ask what bitrate the user wants.
 		dialog = xbmcgui.Dialog()
 		xbmc.executebuiltin('Dialog.Close(busydialog)')
@@ -331,12 +341,13 @@ class XBMC_NHL_GameCenter(object):
 			game   = game,
 		)
 
-		view_options = [
+		extra_options = [
 			(__language__(30060), self.game_center.STREAM_TYPE_CONDENSED),
 			(__language__(30061), self.game_center.STREAM_TYPE_HIGHLIGHTS),
 		]
 
-		for label, stream_type in view_options:
+		use_bitrate = None
+		for idx, (label, stream_type) in enumerate(extra_options):
 			try:
 				if game['streams'][stream_type] is None:
 					continue
@@ -345,7 +356,7 @@ class XBMC_NHL_GameCenter(object):
 					continue
 
 				playlists = self.game_center.get_stream_playlist(master_url)
-				use_bitrate = self.select_bitrate(playlists)
+				use_bitrate = self.select_bitrate(playlists, prev_bitrate=use_bitrate, adjust_bitrate=(idx == 1))
 				self.add_item(
 					label = label,
 					url   = playlists[use_bitrate],
@@ -372,8 +383,8 @@ class XBMC_NHL_GameCenter(object):
 		if game['streams'][self.game_center.STREAM_TYPE_LIVE]['french'] is not None:
 			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
 
-		have_stream = False
-		for label, stream_key, perspective in perspectives:
+		use_bitrate = None
+		for idx, (label, stream_key, perspective) in enumerate(perspectives):
 			if game['streams'][self.game_center.STREAM_TYPE_LIVE][stream_key] is None:
 				continue
 			try:
@@ -382,7 +393,7 @@ class XBMC_NHL_GameCenter(object):
 					continue
 
 				playlists = self.game_center.get_stream_playlist(master_url)
-				use_bitrate = self.select_bitrate(playlists)
+				use_bitrate = self.select_bitrate(playlists, prev_bitrate=use_bitrate, adjust_bitrate=(idx == 1))
 				self.add_item(
 					label = label,
 					url   = playlists[use_bitrate],
