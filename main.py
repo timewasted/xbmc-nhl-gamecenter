@@ -330,26 +330,34 @@ class XBMC_NHL_GameCenter(object):
 			params = {'mode': 'live'},
 			game   = game,
 		)
-		# Condensed stream
-		if game['streams'][self.game_center.STREAM_TYPE_CONDENSED] is not None:
-			self.add_folder(
-				label  = __language__(30060),
-				params = {
-					'mode':        'watch',
-					'stream_type': self.game_center.STREAM_TYPE_CONDENSED,
-				},
-				game   = game,
-			)
-		# Highlight stream
-		if game['streams'][self.game_center.STREAM_TYPE_HIGHLIGHTS] is not None:
-			self.add_folder(
-				label  = __language__(30061),
-				params = {
-					'mode':        'watch',
-					'stream_type': self.game_center.STREAM_TYPE_HIGHLIGHTS,
-				},
-				game   = game,
-			)
+
+		view_options = [
+			(__language__(30060), self.game_center.STREAM_TYPE_CONDENSED),
+			(__language__(30061), self.game_center.STREAM_TYPE_HIGHLIGHTS),
+		]
+
+		for label, stream_type in view_options:
+			try:
+				if game['streams'][stream_type] is None:
+					continue
+				master_url = self.game_center.get_master_playlist(game['event_id'], game['streams'][stream_type])
+				if master_url is None:
+					continue
+
+				playlists = self.game_center.get_stream_playlist(master_url)
+				use_bitrate = self.select_bitrate(playlists)
+				self.add_item(
+					label = label,
+					url   = playlists[use_bitrate],
+					game  = game,
+				)
+			except nhlgc.NetworkError as error:
+				if error.status_code != 404:
+					self.display_notification(error)
+					self.add_item(label=__language__(30030), params=retry_args)
+			except nhlgc.LoginError as error:
+				self.display_notification(error)
+				self.add_item(label=__language__(30030), params=retry_args)
 
 	def MODE_live(self, game):
 		retry_args = {
@@ -387,37 +395,6 @@ class XBMC_NHL_GameCenter(object):
 			except nhlgc.LoginError as error:
 				self.display_notification(error)
 				self.add_item(label=__language__(30030), params=retry_args)
-
-	def MODE_watch(self, game, stream_type):
-		retry_args = {
-			'mode':        'watch',
-			'game':        game,
-			'stream_type': stream_type,
-		}
-
-		try:
-			if game['streams'][stream_type] is None:
-				return
-			master_url = self.game_center.get_master_playlist(game['event_id'], game['streams'][stream_type])
-			if master_url is None:
-				return
-
-			playlists = self.game_center.get_stream_playlist(master_url)
-			use_bitrate = self.select_bitrate(playlists)
-			# FIXME: We should play the file directly instead of having to go
-			# through another menu.
-			self.add_item(
-				label = 'Play',
-				url   = playlists[use_bitrate],
-				game  = game,
-			)
-		except nhlgc.NetworkError as error:
-			if error.status_code != 404:
-				self.display_notification(error)
-				self.add_item(label=__language__(30030), params=retry_args)
-		except nhlgc.LoginError as error:
-			self.display_notification(error)
-			self.add_item(label=__language__(30030), params=retry_args)
 
 	def MODE_watch_OLD(self, game, stream_type):
 		retry_args = {
@@ -572,11 +549,6 @@ try:
 		xbmcplugin.setContent(__addonhandle__, 'episodes')
 		game = game_center.unserialize_data(__addonargs__.get('game')[0])
 		game_center.MODE_live(game)
-	elif mode == 'watch':
-		xbmcplugin.setContent(__addonhandle__, 'episodes')
-		game = game_center.unserialize_data(__addonargs__.get('game')[0])
-		stream_type = __addonargs__.get('stream_type')[0]
-		game_center.MODE_watch(game, stream_type)
 #	elif mode == 'archives':
 #		season = __addonargs__.get('season')[0]
 #		if season == 'None':
