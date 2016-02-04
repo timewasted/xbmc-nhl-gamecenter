@@ -564,38 +564,6 @@ class nhlgc(object):
 
 		return playlists
 
-	def get_game_highlights(self, season, game_id, season_type):
-		fn_name = 'get_game_highlights'
-
-		base_id = season + season_type.zfill(2) + game_id.zfill(4)
-		home_suffix, away_suffix, french_suffix = '-X-h', '-X-a', '-X-fr'
-		params = {
-			'format': 'json',
-			'ids': base_id + home_suffix + ',' + base_id + away_suffix + ',' + base_id + french_suffix,
-		}
-		try:
-			r = requests.get(self.__urls['highlights'], params=params, cookies=None)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		# Error handling.
-		if r.status_code != 200:
-			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-		if r.text.strip() == '':
-			return {}
-		highlights = json.loads(r.text)
-
-		highlights_dict = {}
-		for details in highlights:
-			if details['id'] == base_id + home_suffix:
-				highlights_dict['home'] = details
-			elif details['id'] == base_id + away_suffix:
-				highlights_dict['away'] = details
-			elif details['id'] == base_id + french_suffix:
-				highlights_dict['french'] = details
-
-		return highlights_dict
-
 	def get_authorized_stream_url(self, game, m3u8_url, from_start=False):
 		fn_name = 'get_authorized_stream_url'
 
