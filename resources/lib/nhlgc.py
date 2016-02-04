@@ -56,6 +56,15 @@ class nhlgc(object):
 	GAME_STATUS_FINAL6      = '6'
 	GAME_STATUS_FINAL7      = '7'
 
+	MEDIA_FEED_TITLE_CONDENSED  = 'Extended Highlights'
+	MEDIA_FEED_TITLE_FULL       = 'NHLTV'
+	MEDIA_FEED_TITLE_HIGHLIGHTS = 'Recap'
+
+	MEDIA_FEED_TYPE_AWAY     = 'AWAY'
+	MEDIA_FEED_TYPE_FRENCH   = 'FRENCH'
+	MEDIA_FEED_TYPE_HOME     = 'HOME'
+	MEDIA_FEED_TYPE_NATIONAL = 'NATIONAL'
+
 	PLAYBACK_SCENARIO_MOBILE        = 'HTTP_CLOUD_MOBILE'
 	PLAYBACK_SCENARIO_TABLET        = 'HTTP_CLOUD_TABLET'
 	PLAYBACK_SCENARIO_TABLET_60     = 'HTTP_CLOUD_TABLET_60'
@@ -373,9 +382,13 @@ class nhlgc(object):
 					'away_goals':  game['teams']['away']['score'],
 					'french_game': False,
 					'streams':     {
-						'home':   None,
-						'away':   None,
-						'french': None,
+						'live': {
+							'home':   None,
+							'away':   None,
+							'french': None,
+						},
+						'condensed':  None,
+						'highlights': None,
 					},
 				}
 
@@ -384,22 +397,33 @@ class nhlgc(object):
 				if 'media' not in game['content']:
 					continue
 				for epg_media in game['content']['media']['epg']:
-					if 'platform' not in epg_media or epg_media['platform'] != 'web':
+					if 'title' not in epg_media or 'items' not in epg_media:
 						continue
-					for epg_item in epg_media['items']:
-						if epg_item['mediaFeedType'] == 'HOME' or epg_item['mediaFeedType'] == 'NATIONAL':
-							info['event_id']        = epg_item['eventId']
-							info['streams']['home'] = epg_item['mediaPlaybackId']
-						elif epg_item['mediaFeedType'] == 'AWAY':
-							info['event_id']        = epg_item['eventId']
-							info['streams']['away'] = epg_item['mediaPlaybackId']
-						elif epg_item['mediaFeedType'] == 'FRENCH':
-							info['event_id']          = epg_item['eventId']
-							info['french_game']       = True
-							info['streams']['french'] = epg_item['mediaPlaybackId']
+
+					if epg_media['title'] == self.MEDIA_FEED_TITLE_FULL:
+						for epg_item in epg_media['items']:
+							# FIXME: I'm pretty sure treating home and national
+							# the same is incorrect.
+							if epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_HOME or epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_NATIONAL:
+								info['event_id']                = epg_item['eventId']
+								info['streams']['live']['home'] = epg_item['mediaPlaybackId']
+							elif epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_AWAY:
+								info['event_id']                = epg_item['eventId']
+								info['streams']['live']['away'] = epg_item['mediaPlaybackId']
+							elif epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_FRENCH:
+								info['event_id']                  = epg_item['eventId']
+								info['french_game']               = True
+								info['streams']['live']['french'] = epg_item['mediaPlaybackId']
+					elif epg_media['title'] == self.MEDIA_FEED_TITLE_CONDENSED:
+						for epg_item in epg_media['items']:
+							if 'type' in epg_item and epg_item['type'] == 'video':
+								info['streams']['condensed'] = epg_item['mediaPlaybackId']
+					elif epg_media['title'] == self.MEDIA_FEED_TITLE_HIGHLIGHTS:
+						for epg_item in epg_media['items']:
+							if 'type' in epg_item and epg_item['type'] == 'video':
+								info['streams']['highlights'] = epg_item['mediaPlaybackId']
 
 				day_games.append(info)
-
 			# Sort the games for the day by the game's start time.
 			for game in sorted(day_games, key=lambda game: game['start_time']):
 				all_games.append(game)
