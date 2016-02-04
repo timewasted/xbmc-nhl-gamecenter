@@ -127,7 +127,7 @@ class XBMC_NHL_GameCenter(object):
 #				self.team_info[game['home_team']]['full-name'],
 #				self.team_info[game['away_team']]['full-name'],
 #			],
-			'title': self.game_title(game, None)[0],
+			'title': self.game_title(game)[0],
 			'duration': 0,
 		}
 		if len(title_suffix) > 0:
@@ -208,7 +208,7 @@ class XBMC_NHL_GameCenter(object):
 		ret = dialog.select(__language__(30005), sorted_streams)
 		return sorted_streams[ret]
 
-	def game_title(self, game, scoreboard):
+	def game_title(self, game):
 		# Get the team names.
 		home_team = game['home_team']
 		away_team = game['away_team']
@@ -220,11 +220,6 @@ class XBMC_NHL_GameCenter(object):
 
 		# Get the score for the game.
 		home_team_score, away_team_score = game['home_goals'], game['away_goals']
-		if scoreboard is not None and game['id'] in scoreboard:
-			if home_team_score is None and str(scoreboard[game['id']]['hts']) != '':
-				home_team_score = str(scoreboard[game['id']]['hts'])
-			if away_team_score is None and str(scoreboard[game['id']]['ats']) != '':
-				away_team_score = str(scoreboard[game['id']]['ats'])
 
 		# Get the required dates and times.
 		current_time_utc = datetime.utcnow().replace(tzinfo=tz.tzutc())
@@ -271,8 +266,8 @@ class XBMC_NHL_GameCenter(object):
 			game_score,
 		)
 
-	def formatted_game_title(self, game, scoreboard):
-		title = self.game_title(game, scoreboard)
+	def formatted_game_title(self, game):
+		title = self.game_title(game)
 		game_title = title[1] + ': '
 		if len(title[2]) > 0:
 			game_title += title[2] + ' '
@@ -307,26 +302,20 @@ class XBMC_NHL_GameCenter(object):
 		else:
 			retry_args['type'] = 'recent'
 
-		scoreboard = None
 		try:
-			scoreboard = self.game_center.get_current_scoreboard()
-		except nhlgc.NetworkError:
-			pass
-
-		try:
-			games = self.game_center.get_games_list(today_only)
+			games = self.game_center.get_game_list(today_only)
 			for game in games:
 				if game['end_time'] is not None:
 					params = {'mode': 'view_options'}
 				else:
 					params = {
-						'mode': 'watch',
+						'mode':        'watch',
 						'stream_type': self.game_center.STREAM_TYPE_LIVE,
 					}
 				self.add_folder(
-					label=self.formatted_game_title(game, scoreboard),
-					params=params,
-					game=game,
+					label  = self.formatted_game_title(game),
+					params = params,
+					game   = game,
 				)
 			return
 		except nhlgc.NetworkError as error:
@@ -350,13 +339,51 @@ class XBMC_NHL_GameCenter(object):
 			self.add_folder(
 				label=label,
 				params={
-					'mode': 'watch',
+					'mode':        'watch',
 					'stream_type': stream_type,
 				},
 				game=game,
 			)
 
 	def MODE_watch(self, game, stream_type):
+		retry_args = {
+			'mode':        'watch',
+			'game':        game,
+			'stream_type': stream_type,
+		}
+
+		perspectives = [
+			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
+			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
+		]
+		if game['french_game'] == True:
+			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
+
+		have_stream = False
+		for label, stream_key, perspective in perspectives:
+			if game['streams'][stream_key] == None:
+				continue
+			try:
+				master_url = self.game_center.get_master_playlist(game['event_id'], game['streams'][stream_key])
+				if master_url == None:
+					continue
+
+				playlists = self.game_center.get_stream_playlist(master_url)
+				use_bitrate = self.select_bitrate(playlists)
+				self.add_item(
+					label = label,
+					url   = playlists[use_bitrate],
+					game  = game,
+				)
+			except nhlgc.NetworkError as error:
+				if error.status_code != 404:
+					self.display_notification(error)
+					self.add_item(label=__language__(30030), params=retry_args)
+			except nhlgc.LoginError as error:
+				self.display_notification(error)
+				self.add_item(label=__language__(30030), params=retry_args)
+
+	def MODE_watch_OLD(self, game, stream_type):
 		retry_args = {
 			'mode': 'watch',
 			'game': game,
@@ -510,16 +537,16 @@ try:
 		game = game_center.unserialize_data(__addonargs__.get('game')[0])
 		stream_type = __addonargs__.get('stream_type')[0]
 		game_center.MODE_watch(game, stream_type)
-	elif mode == 'archives':
-		season = __addonargs__.get('season')[0]
-		if season == 'None':
-			season = None
-		game_center.MODE_archives(season)
-	elif mode == 'archives_month':
-		xbmcplugin.setContent(__addonhandle__, 'episodes')
-		season = __addonargs__.get('season')[0]
-		month  = __addonargs__.get('month')[0]
-		game_center.MODE_archives_month(season, month)
+#	elif mode == 'archives':
+#		season = __addonargs__.get('season')[0]
+#		if season == 'None':
+#			season = None
+#		game_center.MODE_archives(season)
+#	elif mode == 'archives_month':
+#		xbmcplugin.setContent(__addonhandle__, 'episodes')
+#		season = __addonargs__.get('season')[0]
+#		month  = __addonargs__.get('month')[0]
+#		game_center.MODE_archives_month(season, month)
 except RuntimeError:
 	pass
 

@@ -28,16 +28,14 @@
 		"conference": "western",
 		"division": "pacific"
 	},
-	"LOS": {
-		"alt-abbr": "LAK",
+	"LAK": {
 		"city": "Los Angeles",
 		"team": "Kings",
 		"full-name": "Los Angeles Kings",
 		"conference": "western",
 		"division": "pacific"
 	},
-	"SAN": {
-		"alt-abbr": "SJS",
+	"SJS": {
 		"city": "San Jose",
 		"team": "Sharks",
 		"full-name": "San Jose Sharks",
@@ -128,11 +126,10 @@
 		"conference": "eastern",
 		"division": "atlantic"
 	},
-	"MON": {
-		"alt-abbr": "MTL",
-		"city": "Montreal",
+	"MTL": {
+		"city": "Montréal",
 		"team": "Canadiens",
-		"full-name": "Montreal Canadiens",
+		"full-name": "Montréal Canadiens",
 		"conference": "eastern",
 		"division": "atlantic"
 	},
@@ -143,8 +140,7 @@
 		"conference": "eastern",
 		"division": "atlantic"
 	},
-	"TAM": {
-		"alt-abbr": "TBL",
+	"TBL": {
 		"city": "Tampa Bay",
 		"team": "Lightning",
 		"full-name": "Tampa Bay Lightning",
@@ -165,8 +161,7 @@
 		"conference": "eastern",
 		"division": "metropolitan"
 	},
-	"CMB": {
-		"alt-abbr": "CBJ",
+	"CBJ": {
 		"city": "Columbus",
 		"team": "Blue Jackets",
 		"full-name": "Columbus Blue Jackets",
