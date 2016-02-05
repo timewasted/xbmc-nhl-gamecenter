@@ -516,7 +516,7 @@ class nhlgc(object):
 #			'platform':         'WEB_MEDIAPLAYER',
 		}
 		try:
-			r = requests.get(self.__urls['stream-info'], headers=headers, params=params)
+			r = self.__session.get(self.__urls['stream-info'], headers=headers, params=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
