@@ -76,9 +76,11 @@ class nhlgc(object):
 	PLAYBACK_SCENARIO_WIRED_ADS     = 'HTTP_CLOUD_WIRED_ADS'
 	PLAYBACK_SCENARIO_WIRED_WEB     = 'HTTP_CLOUD_WIRED_WEB'
 
-	STATUS_CODE_OK              = 1
-	STATUS_CODE_MEDIA_NOT_FOUND = -1000
-	STATUS_CODE_LOGIN_THROTTLED = -3500
+	STATUS_CODE_OK                  = 1
+	STATUS_CODE_MEDIA_NOT_FOUND     = -1000
+	STATUS_CODE_INVALID_CREDENTIALS = -3000
+	STATUS_CODE_LOGIN_THROTTLED     = -3500
+	STATUS_CODE_SYSTEM_ERROR        = -4000
 
 	# NOTE: The server that hosts the 2009 and earlier seasons doesn't allow
 	# access to the videos (HTTP 403 code). I'm unsure if there is anything
@@ -97,11 +99,12 @@ class nhlgc(object):
 			'highlights':       'http://video.nhl.com/videocenter/servlets/playlist',
 
 			# New system
-			'login-basic': 'https://web-secure.nhl.com/authenticate.do',
-			'login-oauth': 'https://user.svc.nhl.com/oauth/token?grant_type=client_credentials',
-			'login':       'https://gateway.web.nhl.com/ws/subscription/flow/nhlPurchase.login',
-			'game-info':   'http://statsapi.web.nhl.com/api/v1/schedule',
-			'stream-info': 'https://mf.svc.nhl.com/ws/media/mf/v2.4/stream',
+			'login-basic':  'https://web-secure.nhl.com/authenticate.do',
+			'login-oauth':  'https://user.svc.nhl.com/oauth/token?grant_type=client_credentials',
+			'login-nhl':    'https://gateway.web.nhl.com/ws/subscription/flow/nhlPurchase.login',
+			'login-rogers': 'https://activation-rogers.svc.nhl.com/ws/subscription/flow/rogers.login-check',
+			'game-info':    'http://statsapi.web.nhl.com/api/v1/schedule',
+			'stream-info':  'https://mf.svc.nhl.com/ws/media/mf/v2.4/stream',
 		}
 
 		# Initialize common variables.
@@ -211,11 +214,16 @@ class nhlgc(object):
 			'User-Agent':    self.DEFAULT_USER_AGENT,
 		}
 
+	def __get_access_token(self):
+		if self.__access_token is None:
+			self.__retry_login()
+		return self.__access_token
+
 	def __retry_login(self):
 		self.login(self.__username, self.__password, self.__rogers_login)
 
-	def login(self, username, password, rogers_login=False):
-		fn_name = 'login'
+	def __login_basic(self, username, password, rogers_login=False):
+		fn_name = '__login_basic'
 
 		session_1 = cookielib.Cookie(
 			version            = 0,
@@ -261,37 +269,33 @@ class nhlgc(object):
 		self.__password     = password
 		self.__rogers_login = rogers_login
 
-	def __login_oauth(self, username, password, rogers_login=False):
-		fn_name = '__login_oauth'
+	def login(self, username, password, rogers_login=False):
+		fn_name = 'login'
 
 		# Obtain an OAUTH token, if required.
-		if self.__access_token == None:
-			headers = {
-				'Authorization': 'Basic ' + self.CLIENT_TOKEN,
-			}
-			try:
-				r = self.__session.post(self.__urls['login-oauth'], headers=headers)
-			except requests.exceptions.ConnectionError as error:
-				raise self.NetworkError(fn_name, error)
+#		if self.__access_token is None:
+#			headers = {
+#				'Authorization': 'Basic ' + self.CLIENT_TOKEN,
+#			}
+#			try:
+#				r = self.__session.post(self.__urls['login-oauth'], headers=headers)
+#			except requests.exceptions.ConnectionError as error:
+#				raise self.NetworkError(fn_name, error)
 
 			# Error handling.
-			if r.status_code != 200:
-				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-			r_json = json.loads(r.text)
-			if 'access_token' not in r_json:
-				raise self.LoginError()
-			self.__access_token = r_json['access_token']
+#			if r.status_code != 200:
+#				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+#			r_json = json.loads(r.text)
+#			if 'access_token' not in r_json:
+#				raise self.LoginError()
+#			self.__access_token = r_json['access_token']
 
 		# Perform the actual login.
-		# FIXME: This isn't actually working, because it requires some headers
-		# to be passed, and I'm not entirely sure how to acquire these headers,
-		# or if they need to be generated somewhat manually.
-		headers = {
-			'Authorization': self.__access_token,
-		}
 		if rogers_login == True:
+			req_url    = self.__urls['login-rogers']
 			params_key = 'rogersCredentials'
 		else:
+			req_url    = self.__urls['login-nhl']
 			params_key = 'nhlCredentials'
 		params = {}
 		params[params_key] = {
@@ -299,15 +303,19 @@ class nhlgc(object):
 			'password': password,
 		}
 		try:
-			r = self.__session.post(self.__urls['login'], data=params, headers=headers)
+			r = self.__session.post(req_url, cookies=None, json=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
 		# Error handling.
 		if r.status_code != 200:
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		cookie_dict = requests.utils.dict_from_cookiejar(self.__session.cookies)
+		if 'Authorization' not in cookie_dict:
+			raise self.LoginError()
 
 		self.__save_cookies()
+		self.__access_token = cookie_dict['Authorization']
 		self.__username     = username
 		self.__password     = password
 		self.__rogers_login = rogers_login
@@ -438,7 +446,7 @@ class nhlgc(object):
 			return self.__session_key
 
 		headers = {
-			'Authorization': self.__access_token,
+			'Authorization': self.__get_access_token(),
 		}
 		params = {
 			'eventId': event_id,
@@ -446,7 +454,7 @@ class nhlgc(object):
 			'subject': 'NHLTV',
 		}
 		try:
-			r = requests.get(self.__urls['stream-info'], headers=headers, params=params)
+			r = requests.get(self.__urls['stream-info'], cookies=None, headers=headers, params=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
@@ -455,7 +463,7 @@ class nhlgc(object):
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_json = json.loads(r.text)
 		if r_json['status_code'] != self.STATUS_CODE_OK or 'session_key' not in r_json:
-			if retry == True:
+			if retry == True and self.__can_retry_playlist_request(r_json['status_code']):
 				self.__retry_login()
 				return self.__get_session_key(event_id, retry=False)
 			raise self.LogicError(fn_name, 'Unable to retrieve session key')
@@ -497,7 +505,7 @@ class nhlgc(object):
 		fn_name = 'get_master_playlist'
 
 		headers = {
-			'Authorization': self.__access_token,
+			'Authorization': self.__get_access_token(),
 		}
 		params = {
 			'contentId':        game_id,
