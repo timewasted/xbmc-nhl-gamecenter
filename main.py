@@ -334,6 +334,11 @@ class NHL_GameCenter(object):
 		self.add_item(label=__language__(30030), params=retry_args)
 
 	def MODE_view_options(self, game):
+		retry_args = {
+			'mode': 'view_options',
+			'game': game,
+		}
+
 		# Live stream
 		self.add_folder(
 			label  = __language__(30059),
