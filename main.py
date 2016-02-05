@@ -552,7 +552,7 @@ try:
 		cache_folder = False
 		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
 		game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
-		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
+#		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
 	elif mode == 'list':
 		xbmcplugin.setContent(__addonhandle__, 'episodes')
 		cache_folder = False
