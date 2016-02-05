@@ -25,7 +25,7 @@ __cookiesfile__ = xbmc.translatePath(os.path.join(__profile__, 'cookies.lwp'))
 
 game_time_format = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
 
-class XBMC_NHL_GameCenter(object):
+class NHL_GameCenter(object):
 	# This is the list of bitrates defined in settings.xml. These two sources
 	# should be kept in sync!
 	SETTINGS_BITRATES = [
@@ -541,7 +541,7 @@ try:
 	skip_networking = False
 	if mode is None or mode == 'view_options':
 		skip_networking = True
-	game_center = XBMC_NHL_GameCenter(skip_networking)
+	game_center = NHL_GameCenter(skip_networking)
 
 	if mode is None:
 		cache_folder = False
