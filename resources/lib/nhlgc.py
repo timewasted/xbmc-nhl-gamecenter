@@ -273,27 +273,29 @@ class nhlgc(object):
 		fn_name = 'login'
 
 		# Obtain an OAUTH token, if required.
-#		if self.__access_token is None:
-#			headers = {
-#				'Authorization': 'Basic ' + self.CLIENT_TOKEN,
-#			}
-#			try:
-#				r = self.__session.post(self.__urls['login-oauth'], headers=headers)
-#			except requests.exceptions.ConnectionError as error:
-#				raise self.NetworkError(fn_name, error)
+		if self.__access_token is None and rogers_login == True:
+			headers = {
+				'Authorization': 'Basic ' + self.CLIENT_TOKEN,
+			}
+			try:
+				r = self.__session.post(self.__urls['login-oauth'], headers=headers)
+			except requests.exceptions.ConnectionError as error:
+				raise self.NetworkError(fn_name, error)
 
 			# Error handling.
-#			if r.status_code != 200:
-#				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-#			r_json = json.loads(r.text)
-#			if 'access_token' not in r_json:
-#				raise self.LoginError()
-#			self.__access_token = r_json['access_token']
+			if r.status_code != 200:
+				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+			r_json = json.loads(r.text)
+			if 'access_token' not in r_json:
+				raise self.LoginError()
+			self.__access_token = r_json['access_token']
 
 		# Perform the actual login.
+		headers = {}
 		if rogers_login == True:
 			req_url    = self.__urls['login-rogers']
-			params_key = 'rogersCredentials'
+			params_key = 'rogerCredentials'
+			headers['Authorization'] = self.__access_token
 		else:
 			req_url    = self.__urls['login-nhl']
 			params_key = 'nhlCredentials'
@@ -303,7 +305,7 @@ class nhlgc(object):
 			'password': password,
 		}
 		try:
-			r = self.__session.post(req_url, cookies=None, json=params)
+			r = self.__session.post(req_url, cookies=None, headers=headers, json=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
@@ -550,6 +552,7 @@ class nhlgc(object):
 					elif user_verified_media_item['auth_status'] == self.AUTH_STATUS_SUCCESS:
 						url = user_verified_media_item['url']
 						self.__set_playlist_headers(cookies=playlist_cookies)
+		# FIXME: url can be '' or None here, and that should be handled.
 		return url
 
 	def get_stream_playlist(self, master_url):
