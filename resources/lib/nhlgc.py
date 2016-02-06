@@ -355,6 +355,11 @@ class nhlgc(object):
 			return True
 		return False
 
+	def __is_game_ended(self, status_code):
+		if status_code == self.GAME_STATUS_FINAL6 or status_code == self.GAME_STATUS_FINAL7:
+			return True
+		return False
+
 	def __common_game_info(self, fn_name, params):
 		try:
 			r = requests.get(self.__urls['game-info'], params=params, cookies=None)
@@ -381,8 +386,9 @@ class nhlgc(object):
 					'season_type': game['gameType'],
 					'id':          game['gamePk'],
 					'event_id':    None,
-					'blocked':     False, # FIXME: What does a blocked game look like?
+					'blocked':     False, # FIXME: Blocked status requries a separate call to get the event info
 					'live':        self.__is_game_live(game['status']['statusCode']),
+					'ended':       self.__is_game_ended(game['status']['statusCode']),
 					'date':        current_date['date'],
 					'start_time':  parser.parse(game['gameDate']).replace(tzinfo=tz.tzutc()),
 					'end_time':    None,

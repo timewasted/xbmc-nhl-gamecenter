@@ -251,17 +251,14 @@ class NHL_GameCenter(object):
 		if game['blocked']:
 			status_flags = __language__(30022)
 		else:
-			game_ended = False
-			if game['end_time'] is not None:
-				if current_time_utc >= game['end_time']:
-					# Game has ended.
-					game_ended = True
-					time_delta = current_time_utc - game['end_time']
-					if time_delta.days < 1:
-						status_flags = __language__(30024)
-			if not game_ended and game['live'] and current_time_utc >= game['start_time']:
-				# Game is in progress.
+			if game['live']:
 				status_flags = __language__(30023)
+			elif game['ended']:
+				time_delta = current_time_utc - game['start_time']
+				# Any game that has ended and started within the last 8 hours
+				# get flagged as having recently ended.
+				if time_delta.seconds < 28800:
+					status_flags = __language__(30024)
 
 		# Handle showing the game score.
 		game_score = ''
