@@ -273,22 +273,8 @@ class nhlgc(object):
 		fn_name = 'login'
 
 		# Obtain an OAUTH token, if required.
-		if self.__access_token is None and rogers_login == True:
-			headers = {
-				'Authorization': 'Basic ' + self.CLIENT_TOKEN,
-			}
-			try:
-				r = self.__session.post(self.__urls['login-oauth'], headers=headers)
-			except requests.exceptions.ConnectionError as error:
-				raise self.NetworkError(fn_name, error)
-
-			# Error handling.
-			if r.status_code != 200:
-				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-			r_json = json.loads(r.text)
-			if 'access_token' not in r_json:
-				raise self.LoginError()
-			self.__access_token = r_json['access_token']
+		if rogers_login == True:
+			self.__login_oauth()
 
 		# Perform the actual login.
 		headers = {}
@@ -321,6 +307,25 @@ class nhlgc(object):
 		self.__username     = username
 		self.__password     = password
 		self.__rogers_login = rogers_login
+
+	def __login_oauth(self):
+		fn_name = '__login_oauth'
+
+		headers = {
+			'Authorization': 'Basic ' + self.CLIENT_TOKEN,
+		}
+		try:
+			r = self.__session.post(self.__urls['login-oauth'], cookies=None, headers=headers)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		r_json = json.loads(r.text)
+		if 'access_token' not in r_json:
+			raise self.LoginError()
+		self.__access_token = r_json['access_token']
 
 	def get_game_list(self, today_only=True):
 		fn_name = 'get_game_list'
