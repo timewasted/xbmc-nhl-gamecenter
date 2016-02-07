@@ -1,173 +1,4 @@
 {
-	"ANA": {
-		"city": "Anaheim",
-		"team": "Ducks",
-		"full-name": "Anaheim Ducks",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"ARI": {
-		"alt-abbr": "PHX",
-		"city": "Arizona",
-		"team": "Coyotes",
-		"full-name": "Arizona Coyotes",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"CGY": {
-		"city": "Calgary",
-		"team": "Flames",
-		"full-name": "Calgary Flames",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"EDM": {
-		"city": "Edmonton",
-		"team": "Oilers",
-		"full-name": "Edmonton Oilers",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"LAK": {
-		"city": "Los Angeles",
-		"team": "Kings",
-		"full-name": "Los Angeles Kings",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"SJS": {
-		"city": "San Jose",
-		"team": "Sharks",
-		"full-name": "San Jose Sharks",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"VAN": {
-		"city": "Vancouver",
-		"team": "Canucks",
-		"full-name": "Vancouver Canucks",
-		"conference": "western",
-		"division": "pacific"
-	},
-	"CHI": {
-		"city": "Chicago",
-		"team": "Blackhawks",
-		"full-name": "Chicago Blackhawks",
-		"conference": "western",
-		"division": "central"
-	},
-	"COL": {
-		"city": "Colorado",
-		"team": "Avalanche",
-		"full-name": "Colorado Avalanche",
-		"conference": "western",
-		"division": "central"
-	},
-	"DAL": {
-		"city": "Dallas",
-		"team": "Stars",
-		"full-name": "Dallas Stars",
-		"conference": "western",
-		"division": "central"
-	},
-	"MIN": {
-		"city": "Minnesota",
-		"team": "Wild",
-		"full-name": "Minnesota Wild",
-		"conference": "western",
-		"division": "central"
-	},
-	"NSH": {
-		"city": "Nashville",
-		"team": "Predators",
-		"full-name": "Nashville Predators",
-		"conference": "western",
-		"division": "central"
-	},
-	"STL": {
-		"city": "St. Louis",
-		"team": "Blues",
-		"full-name": "St. Louis Blues",
-		"conference": "western",
-		"division": "central"
-	},
-	"WPG": {
-		"city": "Winnipeg",
-		"team": "Jets",
-		"full-name": "Winnipeg Jets",
-		"conference": "western",
-		"division": "central"
-	},
-	"BOS": {
-		"city": "Boston",
-		"team": "Bruins",
-		"full-name": "Boston Bruins",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"BUF": {
-		"city": "Buffalo",
-		"team": "Sabres",
-		"full-name": "Buffalo Sabres",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"DET": {
-		"city": "Detroit",
-		"team": "Red Wings",
-		"full-name": "Detroit Red Wings",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"FLA": {
-		"city": "Florida",
-		"team": "Panthers",
-		"full-name": "Florida Panthers",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"MTL": {
-		"city": "Montréal",
-		"team": "Canadiens",
-		"full-name": "Montréal Canadiens",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"OTT": {
-		"city": "Ottawa",
-		"team": "Senators",
-		"full-name": "Ottawa Senators",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"TBL": {
-		"city": "Tampa Bay",
-		"team": "Lightning",
-		"full-name": "Tampa Bay Lightning",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"TOR": {
-		"city": "Toronto",
-		"team": "Maple Leafs",
-		"full-name": "Toronto Maple Leafs",
-		"conference": "eastern",
-		"division": "atlantic"
-	},
-	"CAR": {
-		"city": "Carolina",
-		"team": "Hurricanes",
-		"full-name": "Carolina Hurricanes",
-		"conference": "eastern",
-		"division": "metropolitan"
-	},
-	"CBJ": {
-		"city": "Columbus",
-		"team": "Blue Jackets",
-		"full-name": "Columbus Blue Jackets",
-		"conference": "eastern",
-		"division": "metropolitan"
-	},
 	"NJD": {
 		"city": "New Jersey",
 		"team": "Devils",
@@ -203,6 +34,68 @@
 		"conference": "eastern",
 		"division": "metropolitan"
 	},
+	"BOS": {
+		"city": "Boston",
+		"team": "Bruins",
+		"full-name": "Boston Bruins",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"BUF": {
+		"city": "Buffalo",
+		"team": "Sabres",
+		"full-name": "Buffalo Sabres",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"MTL": {
+		"city": "Montréal",
+		"team": "Canadiens",
+		"full-name": "Montréal Canadiens",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"OTT": {
+		"city": "Ottawa",
+		"team": "Senators",
+		"full-name": "Ottawa Senators",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"TOR": {
+		"city": "Toronto",
+		"team": "Maple Leafs",
+		"full-name": "Toronto Maple Leafs",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"ATL-inactive": {
+		"city": "Atlanta",
+		"team": "Thrashers",
+		"full-name": "Atlanta Thrashers",
+		"obsolete": true
+	},
+	"CAR": {
+		"city": "Carolina",
+		"team": "Hurricanes",
+		"full-name": "Carolina Hurricanes",
+		"conference": "eastern",
+		"division": "metropolitan"
+	},
+	"FLA": {
+		"city": "Florida",
+		"team": "Panthers",
+		"full-name": "Florida Panthers",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"TBL": {
+		"city": "Tampa Bay",
+		"team": "Lightning",
+		"full-name": "Tampa Bay Lightning",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
 	"WSH": {
 		"city": "Washington",
 		"team": "Capitals",
@@ -210,16 +103,340 @@
 		"conference": "eastern",
 		"division": "metropolitan"
 	},
-	"ATL": {
-		"city": "Atlanta",
-		"team": "Thrashers",
-		"full-name": "Atlanta Thrashers",
-		"obsolete": true
+	"CHI": {
+		"city": "Chicago",
+		"team": "Blackhawks",
+		"full-name": "Chicago Blackhawks",
+		"conference": "western",
+		"division": "central"
+	},
+	"DET": {
+		"city": "Detroit",
+		"team": "Red Wings",
+		"full-name": "Detroit Red Wings",
+		"conference": "eastern",
+		"division": "atlantic"
+	},
+	"NSH": {
+		"city": "Nashville",
+		"team": "Predators",
+		"full-name": "Nashville Predators",
+		"conference": "western",
+		"division": "central"
+	},
+	"STL": {
+		"city": "St. Louis",
+		"team": "Blues",
+		"full-name": "St. Louis Blues",
+		"conference": "western",
+		"division": "central"
+	},
+	"CGY": {
+		"city": "Calgary",
+		"team": "Flames",
+		"full-name": "Calgary Flames",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"COL": {
+		"city": "Colorado",
+		"team": "Avalanche",
+		"full-name": "Colorado Avalanche",
+		"conference": "western",
+		"division": "central"
+	},
+	"EDM": {
+		"city": "Edmonton",
+		"team": "Oilers",
+		"full-name": "Edmonton Oilers",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"VAN": {
+		"city": "Vancouver",
+		"team": "Canucks",
+		"full-name": "Vancouver Canucks",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"ANA": {
+		"city": "Anaheim",
+		"team": "Ducks",
+		"full-name": "Anaheim Ducks",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"DAL": {
+		"city": "Dallas",
+		"team": "Stars",
+		"full-name": "Dallas Stars",
+		"conference": "western",
+		"division": "central"
+	},
+	"LAK": {
+		"city": "Los Angeles",
+		"team": "Kings",
+		"full-name": "Los Angeles Kings",
+		"conference": "western",
+		"division": "pacific"
 	},
 	"PHX": {
 		"city": "Phoenix",
 		"team": "Coyotes",
 		"full-name": "Phoenix Coyotes",
 		"obsolete": true
-	}
+	},
+	"SJS": {
+		"city": "San Jose",
+		"team": "Sharks",
+		"full-name": "San Jose Sharks",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"CBJ": {
+		"city": "Columbus",
+		"team": "Blue Jackets",
+		"full-name": "Columbus Blue Jackets",
+		"conference": "eastern",
+		"division": "metropolitan"
+	},
+	"MIN": {
+		"city": "Minnesota",
+		"team": "Wild",
+		"full-name": "Minnesota Wild",
+		"conference": "western",
+		"division": "central"
+	},
+	"MNS": {
+		"city": "Minnesota",
+		"team": "North Stars",
+		"full-name": "Minnesota North Stars",
+		"obsolete": true
+	},
+	"QUE": {
+		"city": "Quebec",
+		"team": "Nordiques",
+		"full-name": "Quebec Nordiques",
+		"obsolete": true
+	},
+	"WIN": {
+		"city": "Winnipeg",
+		"team": "Jets",
+		"full-name": "Winnipeg Jets",
+		"obsolete": true
+	},
+	"HFD": {
+		"city": "Hartford",
+		"team": "Whalers",
+		"full-name": "Hartford Whalers",
+		"obsolete": true
+	},
+	"CLR": {
+		"city": "Colorado",
+		"team": "Rockies",
+		"full-name": "Colorado Rockies",
+		"obsolete": true
+	},
+	"SEN": {
+		"city": "Ottawa",
+		"team": "Senators",
+		"full-name": "Ottawa Senators",
+		"obsolete": true
+	},
+	"HAM": {
+		"city": "Hamilton",
+		"team": "Tigers",
+		"full-name": "Hamilton Tigers",
+		"obsolete": true
+	},
+	"PIR": {
+		"city": "Pittsburgh",
+		"team": "Pirates",
+		"full-name": "Pittsburgh Pirates",
+		"obsolete": true
+	},
+	"QUA": {
+		"city": "Philadelphia",
+		"team": "Quakers",
+		"full-name": "Philadelphia Quakers",
+		"obsolete": true
+	},
+	"DCG": {
+		"city": "Detroit",
+		"team": "Cougars",
+		"full-name": "Detroit Cougars",
+		"obsolete": true
+	},
+	"MWN": {
+		"city": "Montreal",
+		"team": "Wanderers",
+		"full-name": "Montreal Wanderers",
+		"obsolete": true
+	},
+	"QBD": {
+		"city": "Quebec",
+		"team": "Bulldogs",
+		"full-name": "Quebec Bulldogs",
+		"obsolete": true
+	},
+	"MMR": {
+		"city": "Montreal",
+		"team": "Maroons",
+		"full-name": "Montreal Maroons",
+		"obsolete": true
+	},
+	"NYA": {
+		"city": "New York",
+		"team": "Americans",
+		"full-name": "New York Americans",
+		"obsolete": true
+	},
+	"SLE": {
+		"city": "Saint Louis",
+		"team": "Eagles",
+		"full-name": "Saint Louis Eagles",
+		"obsolete": true
+	},
+	"OAK": {
+		"city": "Oakland",
+		"team": "Seals",
+		"full-name": "Oakland Seals",
+		"obsolete": true
+	},
+	"AFM": {
+		"city": "Atlanta",
+		"team": "Flames",
+		"full-name": "Atlanta Flames",
+		"obsolete": true
+	},
+	"KCS": {
+		"city": "Kansas City",
+		"team": "Scouts",
+		"full-name": "Kansas City Scouts",
+		"obsolete": true
+	},
+	"CBN": {
+		"city": "Cleveland",
+		"team": "Barons",
+		"full-name": "Cleveland Barons",
+		"obsolete": true
+	},
+	"DFL": {
+		"city": "Detroit",
+		"team": "Falcons",
+		"full-name": "Detroit Falcons",
+		"obsolete": true
+	},
+	"BRK": {
+		"city": "Brooklyn",
+		"team": "Americans",
+		"full-name": "Brooklyn Americans",
+		"obsolete": true
+	},
+	"WPG": {
+		"city": "Winnipeg",
+		"team": "Jets",
+		"full-name": "Winnipeg Jets",
+		"conference": "western",
+		"division": "central"
+	},
+	"ARI": {
+		"alt-abbr": "PHX",
+		"city": "Arizona",
+		"team": "Coyotes",
+		"full-name": "Arizona Coyotes",
+		"conference": "western",
+		"division": "pacific"
+	},
+	"CSE": {
+		"city": "California",
+		"team": "Seals",
+		"full-name": "California Seals",
+		"obsolete": true
+	},
+	"TAN": {
+		"city": "Toronto",
+		"team": "Arenas",
+		"full-name": "Toronto Arenas",
+		"obsolete": true
+	},
+	"TSP": {
+		"city": "Toronto",
+		"team": "Saint Patricks",
+		"full-name": "Toronto Saint Patricks",
+		"obsolete": true
+	},
+	"CAN": {
+		"city": "Canada",
+		"team": "Canada",
+		"full-name": "Canada"
+	},
+	"CZE": {
+		"city": "Czech Republic",
+		"team": "Czech Republic",
+		"full-name": "Czech Republic"
+	},
+	"FIN": {
+		"city": "Finland",
+		"team": "Finland",
+		"full-name": "Finland"
+	},
+	"GER": {
+		"city": "Germany",
+		"team": "Germany",
+		"full-name": "Germany"
+	},
+	"RUS": {
+		"city": "Russia",
+		"team": "Russia",
+		"full-name": "Russia"
+	},
+	"SVK": {
+		"city": "Slovakia",
+		"team": "Slovakia",
+		"full-name": "Slovakia"
+	},
+	"SWE": {
+		"city": "Sweden",
+		"team": "Sweden",
+		"full-name": "Sweden"
+	},
+	"USA": {
+		"city": "United States",
+		"team": "United States",
+		"full-name": "United States"
+	},
+	"SWD": {
+		"city": "Stockholm",
+		"team": "Djurgarden",
+		"full-name": "Stockholm Djurgarden",
+		"obsolete": true
+	},
+	"SWF": {
+		"city": "Stockman",
+		"team": "Farjestad",
+		"full-name": "Stockman Farjestad",
+		"obsolete": true
+	},
+	"ATL": {
+		"city": "Team Atlantic",
+		"team": "Team Atlantic All-Stars",
+		"full-name": "Team Atlantic All-Stars"
+	},
+	"MET": {
+		"city": "Team Metropolitan",
+		"team": "Team Metropolitan All-Stars",
+		"full-name": "Team Metropolitan All-Stars"
+	},
+	"CEN": {
+		"city": "Team Central",
+		"team": "Team Central All-Stars",
+		"full-name": "Team Central All-Stars"
+	},
+	"PAC": {
+		"city": "Team Pacific",
+		"team": "Team Pacific All-Stars",
+		"full-name": "Team Pacific All-Stars"
+	},
+	"notes": "Last scraped team #90 from https://statsapi.web.nhl.com/api/v1/teams/..."
 }
