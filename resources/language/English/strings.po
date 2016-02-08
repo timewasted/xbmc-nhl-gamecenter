@@ -270,3 +270,7 @@ msgstr ""
 msgctxt "#30064"
 msgid "Show stream duration"
 msgstr ""
+
+msgctxt "#30065"
+msgid "National stream"
+msgstr ""

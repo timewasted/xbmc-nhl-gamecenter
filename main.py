@@ -379,18 +379,18 @@ class NHL_GameCenter(object):
 		}
 
 		perspectives = [
-			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
-			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
+			(__language__(30065), self.game_center.STREAM_PERSPECTIVE_NATIONAL),
+			(__language__(30025), self.game_center.STREAM_PERSPECTIVE_HOME),
+			(__language__(30026), self.game_center.STREAM_PERSPECTIVE_AWAY),
+			(__language__(30062), self.game_center.STREAM_PERSPECTIVE_FRENCH),
 		]
-		if game['streams'][self.game_center.STREAM_TYPE_LIVE]['french'] is not None:
-			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
 
 		use_bitrate = None
-		for idx, (label, stream_key, perspective) in enumerate(perspectives):
-			if game['streams'][self.game_center.STREAM_TYPE_LIVE][stream_key] is None:
+		for idx, (label, stream_perspective) in enumerate(perspectives):
+			if game['streams'][self.game_center.STREAM_TYPE_LIVE][stream_perspective] is None:
 				continue
 			try:
-				master_url = self.game_center.get_master_playlist(game['event_id'], game['streams'][self.game_center.STREAM_TYPE_LIVE][stream_key])
+				master_url = self.game_center.get_master_playlist(game['event_id'], game['streams'][self.game_center.STREAM_TYPE_LIVE][stream_perspective])
 				if master_url is None:
 					continue
 

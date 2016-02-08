@@ -82,6 +82,11 @@ class nhlgc(object):
 	STATUS_CODE_LOGIN_THROTTLED     = -3500
 	STATUS_CODE_SYSTEM_ERROR        = -4000
 
+	STREAM_PERSPECTIVE_AWAY     = 'away'
+	STREAM_PERSPECTIVE_FRENCH   = 'french'
+	STREAM_PERSPECTIVE_HOME     = 'home'
+	STREAM_PERSPECTIVE_NATIONAL = 'national'
+
 	# NOTE: The server that hosts the 2009 and earlier seasons doesn't allow
 	# access to the videos (HTTP 403 code). I'm unsure if there is anything
 	# that can be done to fix this.
@@ -403,13 +408,14 @@ class nhlgc(object):
 					'away_goals':  game['teams']['away']['score'],
 					'french_game': False,
 					'streams':     {
-						'live': {
-							'home':   None,
-							'away':   None,
-							'french': None,
+						self.STREAM_TYPE_LIVE: {
+							self.STREAM_PERSPECTIVE_NATIONAL: None,
+							self.STREAM_PERSPECTIVE_HOME:     None,
+							self.STREAM_PERSPECTIVE_AWAY:     None,
+							self.STREAM_PERSPECTIVE_FRENCH:   None,
 						},
-						'condensed':  None,
-						'highlights': None,
+						self.STREAM_TYPE_CONDENSED:  None,
+						self.STREAM_TYPE_HIGHLIGHTS: None,
 					},
 				}
 
@@ -422,27 +428,32 @@ class nhlgc(object):
 						continue
 
 					if epg_media['title'] == self.MEDIA_FEED_TITLE_FULL:
+						stream_type = self.STREAM_TYPE_LIVE
 						for epg_item in epg_media['items']:
-							# FIXME: I'm pretty sure treating home and national
-							# the same is incorrect.
-							if epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_HOME or epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_NATIONAL:
-								info['event_id']                = epg_item['eventId']
-								info['streams']['live']['home'] = epg_item['mediaPlaybackId']
+							stream_perspective = None
+							if epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_NATIONAL:
+								stream_perspective = self.STREAM_PERSPECTIVE_NATIONAL
+							elif epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_HOME:
+								stream_perspective = self.STREAM_PERSPECTIVE_HOME
 							elif epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_AWAY:
-								info['event_id']                = epg_item['eventId']
-								info['streams']['live']['away'] = epg_item['mediaPlaybackId']
+								stream_perspective = self.STREAM_PERSPECTIVE_AWAY
 							elif epg_item['mediaFeedType'] == self.MEDIA_FEED_TYPE_FRENCH:
-								info['event_id']                  = epg_item['eventId']
-								info['french_game']               = True
-								info['streams']['live']['french'] = epg_item['mediaPlaybackId']
+								stream_perspective = self.STREAM_PERSPECTIVE_FRENCH
+								info['french_game'] = True
+
+							if stream_perspective is not None:
+								info['event_id']                                 = epg_item['eventId']
+								info['streams'][stream_type][stream_perspective] = epg_item['mediaPlaybackId']
 					elif epg_media['title'] == self.MEDIA_FEED_TITLE_CONDENSED:
+						stream_type = self.STREAM_TYPE_CONDENSED
 						for epg_item in epg_media['items']:
 							if 'type' in epg_item and epg_item['type'] == 'video':
-								info['streams']['condensed'] = epg_item['mediaPlaybackId']
+								info['streams'][stream_type] = epg_item['mediaPlaybackId']
 					elif epg_media['title'] == self.MEDIA_FEED_TITLE_HIGHLIGHTS:
+						stream_type = self.STREAM_TYPE_HIGHLIGHTS
 						for epg_item in epg_media['items']:
 							if 'type' in epg_item and epg_item['type'] == 'video':
-								info['streams']['highlights'] = epg_item['mediaPlaybackId']
+								info['streams'][stream_type] = epg_item['mediaPlaybackId']
 
 				day_games.append(info)
 			# Sort the games for the day by the game's start time.
