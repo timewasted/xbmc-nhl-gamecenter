@@ -312,6 +312,9 @@ class NHL_GameCenter(object):
 		try:
 			games = self.game_center.get_game_list(today_only)
 			for game in games:
+				if game['event_id'] is None:
+					continue
+
 				if game['streams'][self.game_center.STREAM_TYPE_CONDENSED] is not None or game['streams'][self.game_center.STREAM_TYPE_HIGHLIGHTS] is not None:
 					params = {'mode': 'view_options'}
 				else:
