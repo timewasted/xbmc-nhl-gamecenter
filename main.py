@@ -325,11 +325,7 @@ class NHL_GameCenter(object):
 					game   = game,
 				)
 			return
-		except nhlgc.NetworkError as error:
-			self.display_notification(error)
-		except nhlgc.LoginError as error:
-			self.display_notification(error)
-		except nhlgc.LogicError as error:
+		except (nhlgc.NetworkError, nhlgc.LoginError, nhlgc.LogicError) as error:
 			self.display_notification(error)
 		self.add_item(label=__language__(30030), params=retry_args)
 
