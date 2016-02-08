@@ -526,6 +526,8 @@ class nhlgc(object):
 		blacked_out = False
 		for user_verified_event in r_json['user_verified_event']:
 			for user_verified_content in user_verified_event['user_verified_content']:
+				if user_verified_content['type'] != 'video':
+					continue
 				for user_verified_media_item in user_verified_content['user_verified_media_item']:
 					blacked_out = user_verified_media_item['blackout_status'] == self.BLACKOUT_STATUS_BLACKEDOUT
 		return blacked_out
@@ -573,6 +575,8 @@ class nhlgc(object):
 		self.__set_playlist_headers()
 		for user_verified_event in r_json['user_verified_event']:
 			for user_verified_content in user_verified_event['user_verified_content']:
+				if user_verified_content['type'] != 'video':
+					continue
 				for user_verified_media_item in user_verified_content['user_verified_media_item']:
 					if user_verified_media_item['auth_status'] == self.AUTH_STATUS_LOGIN_REQUIRED:
 						if retry == True:
