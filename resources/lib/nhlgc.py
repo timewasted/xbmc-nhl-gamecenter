@@ -400,7 +400,7 @@ class nhlgc(object):
 					'season_type': game['gameType'],
 					'id':          game['gamePk'],
 					'event_id':    None,
-					'blocked':     False, # FIXME: Blocked status requries a separate call to get the event info
+					'blocked':     False,
 					'live':        self.__is_game_live(game['status']['statusCode']),
 					'ended':       self.__is_game_ended(game['status']['statusCode']),
 					'date':        current_date['date'],
@@ -523,14 +523,18 @@ class nhlgc(object):
 				return self.get_event_info(event_id, retry=False)
 			raise self.LogicError(fn_name, r_json['status_message'])
 
-		blacked_out = False
+		info = {
+			'blocked': False,
+		}
 		for user_verified_event in r_json['user_verified_event']:
 			for user_verified_content in user_verified_event['user_verified_content']:
 				if user_verified_content['type'] != 'video':
 					continue
 				for user_verified_media_item in user_verified_content['user_verified_media_item']:
-					blacked_out = user_verified_media_item['blackout_status'] == self.BLACKOUT_STATUS_BLACKEDOUT
-		return blacked_out
+					if not info['blocked']:
+						info['blocked'] = user_verified_media_item['blackout_status']['status'] == self.BLACKOUT_STATUS_BLACKEDOUT
+
+		return info
 
 	def get_master_playlist(self, event_id, game_id, retry=True):
 		fn_name = 'get_master_playlist'
