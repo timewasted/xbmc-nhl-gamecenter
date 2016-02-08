@@ -462,42 +462,6 @@ class nhlgc(object):
 				all_games.append(game)
 		return all_games
 
-	def __get_session_key(self, event_id, retry=True):
-		fn_name = '__get_session_key'
-
-		# If we already have a session key, don't try to get another one so
-		# that we don't end up getting locked out due to throttling.
-		if self.__session_key != None:
-			return self.__session_key
-
-		headers = {
-			'Authorization': self.__get_access_token(),
-		}
-		params = {
-			'eventId': event_id,
-			'format':  'json',
-			'subject': 'NHLTV',
-		}
-		try:
-			r = requests.get(self.__urls['stream-info'], cookies=None, headers=headers, params=params)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		# Error handling.
-		if r.status_code != 200:
-			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-		r_json = json.loads(r.text)
-		if r_json['status_code'] != self.STATUS_CODE_OK or 'session_key' not in r_json:
-			if retry == True and self.__can_retry_playlist_request(r_json['status_code']):
-				self.__retry_login()
-				return self.__get_session_key(event_id, retry=False)
-			raise self.LogicError(fn_name, 'Unable to retrieve session key')
-
-		# We have a session key, and we want to save it for reuse.  We will
-		# (ab)use the cookie store to persist it.
-		self.__set_session_key(r_json['session_key'])
-		return self.__session_key
-
 	def __set_session_key(self, session_key):
 		self.__session_key = session_key
 		session_key_cookie = cookielib.Cookie(
@@ -521,10 +485,43 @@ class nhlgc(object):
 		self.__session.cookies.set_cookie(session_key_cookie)
 		self.__save_cookies()
 
-	def __can_retry_playlist_request(self, status_code):
+	def __can_retry_media_request(self, status_code):
 		if status_code == self.STATUS_CODE_MEDIA_NOT_FOUND or status_code == self.STATUS_CODE_LOGIN_THROTTLED:
 			return False
 		return True
+
+	def get_event_info(self, event_id, retry=True):
+		fn_name = 'get_event_info'
+
+		headers = {
+			'Authorization': self.__get_access_token(),
+		}
+		params = {
+			'eventId': event_id,
+			'format':  'json',
+			'subject': 'NHLTV',
+		}
+		if self.__session_key is not None:
+			params['sessionKey'] = self.__session_key
+		try:
+			r = requests.get(self.__urls['stream-info'], cookies=None, headers=headers, params=params)
+		except requests.exceptions.ConnectionError as error:
+			raise self.NetworkError(fn_name, error)
+
+		# Error handling.
+		if r.status_code != 200:
+			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
+		r_json = json.loads(r.text)
+		if 'session_key' in r_json:
+			self.__set_session_key(r_json['session_key'])
+		if r_json['status_code'] != self.STATUS_CODE_OK:
+			if retry == True and self.__can_retry_media_request(r_json['status_code']):
+				self.__retry_login()
+				return self.get_event_info(event_id, retry=False)
+			raise self.LogicError(fn_name, r_json['status_message'])
+
+		# FIXME: Return something useful.
+		return None
 
 	def get_master_playlist(self, event_id, game_id, retry=True):
 		fn_name = 'get_master_playlist'
@@ -535,11 +532,12 @@ class nhlgc(object):
 		params = {
 			'contentId':        game_id,
 			'playbackScenario': self.PLAYBACK_SCENARIO_WIRED_60,
-			'sessionKey':       self.__get_session_key(event_id),
 			'auth':             'response',
 			'format':           'json',
 #			'platform':         'WEB_MEDIAPLAYER',
 		}
+		if self.__session_key is not None:
+			params['sessionKey'] = self.__session_key
 		try:
 			r = self.__session.get(self.__urls['stream-info'], headers=headers, params=params)
 		except requests.exceptions.ConnectionError as error:
@@ -549,8 +547,10 @@ class nhlgc(object):
 		if r.status_code != 200:
 			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
 		r_json = json.loads(r.text)
+		if 'session_key' in r_json:
+			self.__set_session_key(r_json['session_key'])
 		if r_json['status_code'] != self.STATUS_CODE_OK:
-			if retry == True and self.__can_retry_playlist_request(r_json['status_code']):
+			if retry == True and self.__can_retry_media_request(r_json['status_code']):
 				self.__retry_login()
 				return self.get_master_playlist(event_id, game_id, retry=False)
 			raise self.LogicError(fn_name, r_json['status_message'])
