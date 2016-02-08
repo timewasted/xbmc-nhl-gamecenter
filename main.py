@@ -377,7 +377,7 @@ class NHL_GameCenter(object):
 				if error.status_code != 404:
 					self.display_notification(error)
 					self.add_item(label=__language__(30030), params=retry_args)
-			except nhlgc.LoginError as error:
+			except (nhlgc.LoginError, nhlgc.LogicError) as error:
 				self.display_notification(error)
 				self.add_item(label=__language__(30030), params=retry_args)
 
@@ -424,7 +424,7 @@ class NHL_GameCenter(object):
 				if error.status_code != 404:
 					self.display_notification(error)
 					self.add_item(label=__language__(30030), params=retry_args)
-			except nhlgc.LoginError as error:
+			except (nhlgc.LoginError, nhlgc.LogicError) as error:
 				self.display_notification(error)
 				self.add_item(label=__language__(30030), params=retry_args)
 

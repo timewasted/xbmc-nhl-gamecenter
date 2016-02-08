@@ -588,9 +588,13 @@ class nhlgc(object):
 							return self.get_master_playlist(event_id, game_id, retry=False)
 						raise self.LogicError(fn_name, 'Access denied.')
 					elif user_verified_media_item['auth_status'] == self.AUTH_STATUS_SUCCESS:
+						if user_verified_media_item['url'] == '':
+							continue
 						url = user_verified_media_item['url']
 						self.__set_playlist_headers(cookies=playlist_cookies)
-		# FIXME: url can be '' or None here, and that should be handled.
+
+		if url is None:
+			raise self.LogicError(fn_name, 'No playlist found.')
 		return url
 
 	def get_stream_playlist(self, master_url):
