@@ -48,6 +48,9 @@ class nhlgc(object):
 	AUTH_STATUS_NOT_AUTHORIZED = 'NotAuthorizedStatus'
 	AUTH_STATUS_SUCCESS        = 'SuccessStatus'
 
+	BLACKOUT_STATUS_AVAILABLE  = 'SuccessStatus'
+	BLACKOUT_STATUS_BLACKEDOUT = 'BlackedOutStatus'
+
 	GAME_STATUS_SCHEDULED   = '1'
 	GAME_STATUS_PREGAME     = '2'
 	GAME_STATUS_IN_PROGRESS = '3'
@@ -520,8 +523,12 @@ class nhlgc(object):
 				return self.get_event_info(event_id, retry=False)
 			raise self.LogicError(fn_name, r_json['status_message'])
 
-		# FIXME: Return something useful.
-		return None
+		blacked_out = False
+		for user_verified_event in r_json['user_verified_event']:
+			for user_verified_content in user_verified_event['user_verified_content']:
+				for user_verified_media_item in user_verified_content['user_verified_media_item']:
+					blacked_out = user_verified_media_item['blackout_status'] == self.BLACKOUT_STATUS_BLACKEDOUT
+		return blacked_out
 
 	def get_master_playlist(self, event_id, game_id, retry=True):
 		fn_name = 'get_master_playlist'
