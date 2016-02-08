@@ -507,7 +507,7 @@ class nhlgc(object):
 		if self.__session_key is not None:
 			params['sessionKey'] = self.__session_key
 		try:
-			r = requests.get(self.__urls['stream-info'], cookies=None, headers=headers, params=params)
+			r = self.__session.get(self.__urls['stream-info'], cookies=None, headers=headers, params=params)
 		except requests.exceptions.ConnectionError as error:
 			raise self.NetworkError(fn_name, error)
 
