@@ -335,6 +335,16 @@ class NHL_GameCenter(object):
 			'game': game,
 		}
 
+		try:
+			event_info = self.game_center.get_event_info(game['event_id'])
+			if event_info['blocked']:
+				self.display_notification(__language__(30066))
+				return
+		except (nhlgc.NetworkError, nhlgc.LoginError) as error:
+			self.display_notification(error)
+			self.add_item(label=__language__(30030), params=retry_args)
+			return
+
 		# Live stream
 		self.add_folder(
 			label  = __language__(30059),
@@ -376,6 +386,16 @@ class NHL_GameCenter(object):
 			'mode': 'live',
 			'game': game,
 		}
+
+		try:
+			event_info = self.game_center.get_event_info(game['event_id'])
+			if event_info['blocked']:
+				self.display_notification(__language__(30066))
+				return
+		except (nhlgc.NetworkError, nhlgc.LoginError) as error:
+			self.display_notification(error)
+			self.add_item(label=__language__(30030), params=retry_args)
+			return
 
 		perspectives = [
 			(__language__(30065), self.game_center.STREAM_PERSPECTIVE_NATIONAL),

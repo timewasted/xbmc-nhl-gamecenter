@@ -274,3 +274,7 @@ msgstr ""
 msgctxt "#30065"
 msgid "National stream"
 msgstr ""
+
+msgctxt "#30066"
+msgid "This event is blacked out"
+msgstr ""
