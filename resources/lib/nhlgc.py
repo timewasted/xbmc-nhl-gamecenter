@@ -51,13 +51,13 @@ class nhlgc(object):
 	BLACKOUT_STATUS_AVAILABLE  = 'SuccessStatus'
 	BLACKOUT_STATUS_BLACKEDOUT = 'BlackedOutStatus'
 
-	GAME_STATUS_SCHEDULED   = '1'
-	GAME_STATUS_PREGAME     = '2'
-	GAME_STATUS_IN_PROGRESS = '3'
-	GAME_STATUS_UNKNOWN4    = '4'
-	GAME_STATUS_UNKNOWN5    = '5'
-	GAME_STATUS_FINAL6      = '6'
-	GAME_STATUS_FINAL7      = '7'
+	GAME_STATUS_SCHEDULED            = '1'
+	GAME_STATUS_PREGAME              = '2'
+	GAME_STATUS_IN_PROGRESS          = '3'
+	GAME_STATUS_IN_PROGRESS_CRITICAL = '4' # NOTE: Not sure why this is 'critical'.  Last 5 (10?) minutes of the game?
+	GAME_STATUS_UNKNOWN5             = '5'
+	GAME_STATUS_FINAL6               = '6'
+	GAME_STATUS_FINAL7               = '7'
 
 	MEDIA_FEED_TITLE_CONDENSED  = 'Extended Highlights'
 	MEDIA_FEED_TITLE_FULL       = 'NHLTV'
@@ -365,7 +365,7 @@ class nhlgc(object):
 		return self.__common_game_info(fn_name, params)
 
 	def __is_game_live(self, status_code):
-		if status_code == self.GAME_STATUS_IN_PROGRESS or status_code == self.GAME_STATUS_UNKNOWN4 or status_code == self.GAME_STATUS_UNKNOWN5:
+		if status_code == self.GAME_STATUS_IN_PROGRESS or status_code == self.GAME_STATUS_IN_PROGRESS_CRITICAL or status_code == self.GAME_STATUS_UNKNOWN5:
 			return True
 		return False
 
