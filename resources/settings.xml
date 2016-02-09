@@ -27,4 +27,9 @@
 		<setting id="proxy_username" type="text" label="30054" default="" enable="eq(-5,true)"/>
 		<setting id="proxy_password" type="text" label="30055" default="" option="hidden" enable="eq(-6,true)"/>
 	</category>
+
+	<!-- Debug Settings -->
+	<category label="30067">
+		<setting id="clear_cookies" type="bool" default="true" label="30068"/>
+	</category>
 </settings>

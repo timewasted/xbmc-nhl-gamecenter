@@ -100,7 +100,7 @@ class nhlgc(object):
 	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
 	MIN_ARCHIVED_SEASON = 2010
 
-	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file):
+	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file, clear_cookies=False):
 		self.__urls = {
 			# Old system
 			'archived-seasons': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
@@ -128,6 +128,9 @@ class nhlgc(object):
 
 		# Load any saved cookies, if possible.
 		cookiejar = cookielib.LWPCookieJar(cookies_file)
+		if clear_cookies:
+			cookiejar.clear()
+			cookiejar.save()
 		try:
 			cookiejar.load(ignore_discard=True)
 			cookie_dict = requests.utils.dict_from_cookiejar(cookiejar)

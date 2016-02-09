@@ -278,3 +278,11 @@ msgstr ""
 msgctxt "#30066"
 msgid "This event is blacked out"
 msgstr ""
+
+msgctxt "#30067"
+msgid "Debug Settings"
+msgstr ""
+
+msgctxt "#30068"
+msgid "Clear cookies"
+msgstr ""

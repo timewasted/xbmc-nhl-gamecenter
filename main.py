@@ -84,7 +84,9 @@ class NHL_GameCenter(object):
 			pass
 
 		try:
-			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__)
+			clear_cookies = __addon__.getSetting('clear_cookies') == 'true'
+			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__, clear_cookies=clear_cookies)
+			__addon__.setSetting('clear_cookies', 'false')
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
 			raise RuntimeError(error)
