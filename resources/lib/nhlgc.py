@@ -100,7 +100,7 @@ class nhlgc(object):
 	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
 	MIN_ARCHIVED_SEASON = 2010
 
-	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file, skip_networking=False):
+	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file):
 		self.__urls = {
 			# Old system
 			'archived-seasons': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',

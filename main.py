@@ -45,7 +45,7 @@ class NHL_GameCenter(object):
 
 	MATCHUP_IMAGES_URL = 'http://nhl.cdn.neulion.net/u/nhlgc_roku/images/HD/%s_at_%s.jpg'
 
-	def __init__(self, skip_networking=False):
+	def __init__(self):
 		username    = __addon__.getSetting('gc_username')
 		password    = __addon__.getSetting('gc_password')
 		rogerslogin = __addon__.getSetting('gc_rogerslogin') == 'true'
@@ -84,7 +84,7 @@ class NHL_GameCenter(object):
 			pass
 
 		try:
-			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__, skip_networking)
+			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__)
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
 			raise RuntimeError(error)
@@ -559,10 +559,7 @@ try:
 	mode = __addonargs__.get('mode', None)
 	if type(mode) == type(list()):
 		mode = mode[0]
-	skip_networking = False
-	if mode is None or mode == 'view_options':
-		skip_networking = True
-	game_center = NHL_GameCenter(skip_networking)
+	game_center = NHL_GameCenter()
 
 	if mode is None:
 		cache_folder = False
