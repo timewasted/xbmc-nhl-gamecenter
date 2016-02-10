@@ -263,9 +263,9 @@ class NHL_GameCenter(object):
 				status_flags = __language__(30023)
 			elif game['ended']:
 				time_delta = current_time_utc - game['start_time']
-				# Any game that has ended and started within the last 8 hours
+				# Any game that has ended and started within the last 12 hours
 				# get flagged as having recently ended.
-				if time_delta.seconds < 28800:
+				if time_delta.seconds + (time_delta.days * 86400) < 43200:
 					status_flags = __language__(30024)
 
 		# Handle showing the game score.
