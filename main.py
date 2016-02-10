@@ -8,6 +8,7 @@ except ImportError:
 import _strptime
 from datetime import datetime
 from dateutil import tz
+from distutils.version import StrictVersion
 from resources.lib.nhlgc import nhlgc
 
 __addon__       = xbmcaddon.Addon()
@@ -22,6 +23,9 @@ __profile__     = __addon__.getAddonInfo('profile').decode('utf-8')
 __language__    = __addon__.getLocalizedString
 __teams_json__  = os.path.join(__cwd__, 'teams.json')
 __cookiesfile__ = xbmc.translatePath(os.path.join(__profile__, 'cookies.lwp'))
+
+__addonversion__                 = __addon__.getAddonInfo('version')
+__clear_cookies_before_version__ = '0.0.31'
 
 game_time_format = xbmc.getRegion('dateshort') + ' ' + xbmc.getRegion('time').replace(':%S', '')
 
@@ -84,8 +88,10 @@ class NHL_GameCenter(object):
 			pass
 
 		try:
-			clear_cookies = __addon__.getSetting('clear_cookies') == 'true'
+			clear_cookies = __addon__.getSetting('clear_cookies') == 'true' or StrictVersion(__addonversion__) < StrictVersion(__clear_cookies_before_version__)
 			self.game_center = nhlgc(username, password, rogerslogin, proxy_config, hls_server, __cookiesfile__, clear_cookies=clear_cookies)
+			if clear_cookies:
+				__addon__.setSetting('clear_cookies_last_version', __addonversion__)
 			__addon__.setSetting('clear_cookies', 'false')
 		except nhlgc.LogicError as error:
 			self.display_notification(error)
