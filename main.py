@@ -270,7 +270,7 @@ class NHL_GameCenter(object):
 
 		# Handle showing the game score.
 		game_score = ''
-		if self.show_scores and home_team_score is not None and away_team_score is not None:
+		if self.show_scores and (game['live'] or game['ended']) and home_team_score is not None and away_team_score is not None:
 			game_score = '(%s-%s)' % (home_team_score, away_team_score)
 
 		# Prepend the game start time.
