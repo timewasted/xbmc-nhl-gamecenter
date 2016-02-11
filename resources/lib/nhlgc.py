@@ -2,7 +2,6 @@ import cookielib
 import m3u8
 import requests
 import urllib
-import xmltodict
 try:
 	import simplejson as json
 except ImportError:
@@ -12,34 +11,9 @@ from datetime import timedelta
 from dateutil import parser, tz
 from TLSAdapter import TLSAdapter
 
-import xbmc
-
 class nhlgc(object):
 	DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0'
 	NETWORK_ERR_NON_200 = 'Received a non-200 HTTP response.'
-
-	STREAM_TYPE_LIVE       = 'live'
-	STREAM_TYPE_CONDENSED  = 'condensed'
-	STREAM_TYPE_HIGHLIGHTS = 'highlights'
-
-	PERSPECTIVE_HOME        = str(1 << 1)	# '2'
-	PERSPECTIVE_AWAY        = str(1 << 2)	# '4'
-	PERSPECTIVE_FRENCH      = str(1 << 3)	# '8'
-	PERSPECTIVE_HOME_GOALIE = str(1 << 6)	# '64'
-	PERSPECTIVE_AWAY_GOALIE = str(1 << 7)	# '128'
-
-	PRESEASON  = '01'
-	REGSEASON  = '02'
-	POSTSEASON = '03'
-
-	FRENCH_STREAM_TEAMS = {
-		'MON': True, # Montreal Canadiens
-		'OTT': True, # Ottawa Senators
-	}
-
-	##
-	# New system consts.
-	##
 
 	# NOTE: This token is from the meta tag "control_plane_client_token" on https://www.nhl.com/login
 	CLIENT_TOKEN = 'd2ViX25obC12MS4wLjA6MmQxZDg0NmVhM2IxOTRhMThlZjQwYWM5ZmJjZTk3ZTM='
@@ -91,24 +65,12 @@ class nhlgc(object):
 	STREAM_PERSPECTIVE_HOME     = 'home'
 	STREAM_PERSPECTIVE_NATIONAL = 'national'
 
-	# NOTE: The server that hosts the 2009 and earlier seasons doesn't allow
-	# access to the videos (HTTP 403 code). I'm unsure if there is anything
-	# that can be done to fix this.
-	#
-	# Sample URLs:
-	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2009/2_1_wsh_bos_0910_20091001_FINAL_hd.mp4
-	# - http://snhlced.cdnak.neulion.net/s/nhl/svod/flv/2_1_nyr_tbl_0809c_Whole_h264_sd.mp4
-	MIN_ARCHIVED_SEASON = 2010
+	STREAM_TYPE_LIVE       = 'live'
+	STREAM_TYPE_CONDENSED  = 'condensed'
+	STREAM_TYPE_HIGHLIGHTS = 'highlights'
 
 	def __init__(self, username, password, rogers_login, proxy_config, hls_server, cookies_file, clear_cookies=False):
 		self.__urls = {
-			# Old system
-			'archived-seasons': 'https://gamecenter.nhl.com/nhlgc/servlets/allarchives',
-			'archives':         'https://gamecenter.nhl.com/nhlgc/servlets/archives',
-			'highlights':       'http://video.nhl.com/videocenter/servlets/playlist',
-
-			# New system
-			'login-basic':  'https://web-secure.nhl.com/authenticate.do',
 			'login-oauth':  'https://user.svc.nhl.com/oauth/token?grant_type=client_credentials',
 			'login-nhl':    'https://gateway.web.nhl.com/ws/subscription/flow/nhlPurchase.login',
 			'login-rogers': 'https://activation-rogers.svc.nhl.com/ws/subscription/flow/rogers.login-check',
@@ -233,53 +195,6 @@ class nhlgc(object):
 
 	def __retry_login(self):
 		self.login(self.__username, self.__password, self.__rogers_login)
-
-	def __login_basic(self, username, password, rogers_login=False):
-		fn_name = '__login_basic'
-
-		session_1 = cookielib.Cookie(
-			version            = 0,
-			name               = 'SESSION_1',
-			value              = '"referrer===https://subscribe.nhl.com/?&affiliateId=NHLTVREDIRECT~wf_flowId===subscriptions.updatesubscriptionv1~stage===5~flowId===subscriptions.updatesubscriptionv1"',
-			port               = None,
-			port_specified     = False,
-			domain             = '.nhl.com',
-			domain_specified   = True,
-			domain_initial_dot = True,
-			path               = '/',
-			path_specified     = True,
-			secure             = True,
-			expires            = None,
-			discard            = False,
-			comment            = None,
-			comment_url        = None,
-			rest               = {},
-		)
-		self.__session.cookies.set_cookie(session_1)
-
-		params = {
-			'uri':                '/campaign/login_register.jsp',
-			'registrationAction': 'identify',
-			'emailAddress':       username,
-			'password':           password,
-		}
-		try:
-			r = self.__session.post(self.__urls['login-basic'], data=params)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		# Error handling.
-		if r.status_code != 200:
-			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-		cookie_dict = requests.utils.dict_from_cookiejar(self.__session.cookies)
-		if 'Authorization' not in cookie_dict:
-			raise self.LoginError()
-
-		self.__save_cookies()
-		self.__access_token = cookie_dict['Authorization']
-		self.__username     = username
-		self.__password     = password
-		self.__rogers_login = rogers_login
 
 	def login(self, username, password, rogers_login=False):
 		fn_name = 'login'
@@ -620,183 +535,3 @@ class nhlgc(object):
 
 		return playlists
 
-	def get_authorized_stream_url(self, game, m3u8_url, from_start=False):
-		fn_name = 'get_authorized_stream_url'
-
-		try:
-			r = requests.get(m3u8_url)
-			if r.status_code != 200:
-				raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-			m3u8_obj = m3u8.loads(r.text)
-			protocol_headers = {}
-			if m3u8_obj.key is not None:
-				r = requests.get(m3u8_obj.key.uri, cookies=r.cookies)
-				if r.status_code != 200:
-					raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-				protocol_headers = {
-					'Cookie': '',
-					'User-Agent': self.DEFAULT_USER_AGENT,
-				}
-				for cookie in r.cookies:
-					protocol_headers['Cookie'] += '%s=%s; ' % (cookie.name, cookie.value)
-				protocol_headers['Cookie'] += 'nlqptid=' + m3u8_url.split('?', 1)[1]
-			if from_start and game['start_time'] is not None and self.__hls_server is not None:
-				m3u8_url = self.__hls_server + \
-					'/playlist?url=' + urllib.quote_plus(m3u8_url) + \
-					'&start_at=' + game['start_time'].strftime('%Y%m%d%H%M%S')
-				if len(protocol_headers) > 0:
-					m3u8_url += '&headers=' + urllib.quote(urllib.urlencode(protocol_headers))
-			elif len(protocol_headers) > 0:
-				m3u8_url += '|' + urllib.urlencode(protocol_headers)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		return m3u8_url
-
-	def get_archived_seasons(self, retry=True):
-		fn_name = 'get_archived_seasons'
-
-		params = {
-			'date': 'true',
-			'isFlex': 'true',
-		}
-		try:
-			r = self.__session.post(self.__urls['archived-seasons'], data=params)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		# Error handling.
-		if r.status_code != 200:
-			if r.status_code == 401 and retry == True:
-				self.__retry_login()
-				return self.get_archived_seasons(retry=False)
-			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-		r_xml = xmltodict.parse(r.text.strip())
-		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
-			if retry == True:
-				self.__retry_login()
-				return self.get_archived_seasons(retry=False)
-			raise self.LogicError(fn_name, 'Access denied.')
-
-		archives = []
-		try:
-			for archive_season in r_xml['result']['season']:
-				if int(archive_season['@id']) < self.MIN_ARCHIVED_SEASON or not 'g' in archive_season:
-					continue
-				season = {}
-				season['season'] = archive_season['@id']
-				season['months'] = []
-				for date in archive_season['g']:
-					month = date.split('/', 1)[0]
-					if month not in season['months']:
-						season['months'].append(month)
-				archives.append(season)
-		except KeyError:
-			raise self.LogicError(fn_name, 'No archived games found.')
-
-		return sorted(archives, key=lambda seasons: seasons['season'], reverse=True)
-
-	def get_archived_month(self, season, month, retry=True):
-		fn_name = 'get_archived_month'
-
-		##
-		# The following are useful data sources:
-		# - http://feeds.cdnak.neulion.com/fs/nhl/mobile/feeds/data/YYYYMMDD.xml
-		# - http://smb.cdnak.neulion.com/fs/nhl/mobile/feed_new/data/streams/YYYY/ipad/02_IIII.json
-		#
-		# - YYYY = year
-		# - MM   = month
-		# - DD   = day
-		# - IIII = zero padded game ID
-		##
-
-		season = int(season)
-		if season < self.MIN_ARCHIVED_SEASON:
-			return []
-
-		params = {
-			'season': str(season),
-			'month': month,
-			'isFlex': 'true',
-		}
-		try:
-			r = self.__session.post(self.__urls['archives'], data=params)
-		except requests.exceptions.ConnectionError as error:
-			raise self.NetworkError(fn_name, error)
-
-		# Error handling.
-		if r.status_code != 200:
-			if r.status_code == 401 and retry == True:
-				self.__retry_login()
-				return self.get_archived_month(season, month, retry=False)
-			raise self.NetworkError(fn_name, self.NETWORK_ERR_NON_200, r.status_code)
-		r_xml = xmltodict.parse(r.text.strip())
-		if 'code' in r_xml['result'] and r_xml['result']['code'] == 'noaccess':
-			if retry == True:
-				self.__retry_login()
-				return self.get_archived_month(season, month, retry=False)
-			raise self.LogicError(fn_name, 'Access denied.')
-
-		try:
-			games_list = r_xml['result']['games']['game']
-			if not isinstance(games_list, list):
-				games_list = [games_list]
-		except KeyError:
-			raise self.LogicError(fn_name, 'No games found.')
-
-		games = []
-		for game in games_list:
-			if 'program' not in game or 'publishPoint' not in game['program']:
-				continue
-			info = {
-				'season':      game['season'],
-				'season_type': game['type'],
-				'id':          game['id'].zfill(4),
-				'blocked':     'blocked' in game,
-				'live':        'isLive' in game,
-				'date':        parser.parse(game['date']).replace(tzinfo=tz.tzutc()),
-				'start_time':  None,
-				'end_time':    parser.parse(game['date']).replace(tzinfo=tz.tzutc()),
-				'home_team':   game['homeTeam'],
-				'away_team':   game['awayTeam'],
-				'home_goals':  game['homeGoals'],
-				'away_goals':  game['awayGoals'],
-				'french_game': False,
-				'streams':     {
-					'home':   None,
-					'away':   None,
-					'french': None,
-				},
-			}
-
-			# Flag as a French game.
-			if info['home_team'] in self.FRENCH_STREAM_TEAMS or info['away_team'] in self.FRENCH_STREAM_TEAMS:
-				info['french_game'] = True
-
-			# Set the streams.
-			orig_url, qs = game['program']['publishPoint'].split('?', 1)
-			if season >= 2012:
-				host = 'http://nlds150.cdnak.neulion.com/'
-				base_url = orig_url[orig_url.find('/nlds_vod/') + 1:]
-				url = host + base_url + '.m3u8'
-				french_url = url.replace('/nlds_vod/nhl/', '/nlds_vod/nhlfr/')
-				french_url = french_url.replace('_h_', '_fr_')
-				french_url = french_url.replace('_whole_2', '_whole_1')
-			elif season >= 2010:
-				if season == 2011:
-					host = 'http://nhl.cdn.neulion.net/'
-				else:
-					host = 'http://nhl.cdnllnwnl.neulion.net/'
-				base_url = orig_url[orig_url.find('u/nhlmobile/'):]
-				base_url = base_url.replace('/pc/', '/ced/')
-				base_url = base_url.replace('.mp4', '')
-				url = host + base_url + '/v1/playlist.m3u8'
-				french_url = url.replace('/vod/nhl/', '/vod/nhlfr/')
-				french_url = french_url.replace('_h_', '_fr_')
-			info['streams']['home'] = url + '?' + qs
-			info['streams']['away'] = url.replace('_h_', '_a_') + '?' + qs
-			if info['french_game'] == True:
-				info['streams']['french'] = french_url + '?' + qs
-
-			games.append(info)
-		return games

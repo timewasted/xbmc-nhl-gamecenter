@@ -436,128 +436,6 @@ class NHL_GameCenter(object):
 				self.display_notification(error)
 				self.add_item(label=__language__(30030), params=retry_args)
 
-	def MODE_watch_OLD(self, game, stream_type):
-		retry_args = {
-			'mode': 'watch',
-			'game': game,
-			'stream_type': stream_type,
-		}
-
-		if stream_type == self.game_center.STREAM_TYPE_HIGHLIGHTS:
-			highlights = self.game_center.get_game_highlights(game['season'], game['id'], game['season_type'])
-			if 'home' in highlights and 'publishPoint' in highlights['home']:
-				self.add_item(label=__language__(30025), url=highlights['home']['publishPoint'], game=game)
-			if 'away' in highlights and 'publishPoint' in highlights['away']:
-				self.add_item(label=__language__(30026), url=highlights['away']['publishPoint'], game=game)
-			if 'french' in highlights and 'publishPoint' in highlights['away']:
-				self.add_item(label=__language__(30062), url=highlights['french']['publishPoint'], game=game)
-			return
-
-		perspectives = [
-			(__language__(30025), 'home', self.game_center.PERSPECTIVE_HOME),
-			(__language__(30026), 'away', self.game_center.PERSPECTIVE_AWAY),
-		]
-		if game['french_game'] == True:
-			perspectives += [(__language__(30062), 'french', self.game_center.PERSPECTIVE_FRENCH)]
-
-		seen_urls = {}
-		use_bitrate = None
-		for label, stream_key, perspective in perspectives:
-			try:
-				from_start = False
-				if stream_type == self.game_center.STREAM_TYPE_LIVE and game['streams'][stream_key] is not None:
-					playlists = self.game_center.get_playlists_from_m3u8_url(game['streams'][stream_key])
-				else:
-					if stream_type == self.game_center.STREAM_TYPE_LIVE:
-						from_start = True
-					playlists = self.game_center.get_video_playlists(game['season'], game['id'], game['season_type'], stream_type, perspective)
-
-				if len(playlists) == 1:
-					stream_url = playlists.values()[0]
-				else:
-					if use_bitrate is None or use_bitrate not in playlists:
-						use_bitrate = self.select_bitrate(playlists)
-					stream_url = playlists[use_bitrate]
-				if stream_url not in seen_urls:
-					self.add_item(
-						label=label,
-						url=self.game_center.get_authorized_stream_url(game, stream_url, False),
-						game=game,
-					)
-					if self.has_hls_proxy and from_start == True:
-						self.add_item(
-							label=label + __language__(30063),
-							url=self.game_center.get_authorized_stream_url(game, stream_url, True),
-							game=game,
-						)
-					seen_urls[stream_url] = True
-			except nhlgc.NetworkError as error:
-				if error.status_code != 404:
-					self.display_notification(error)
-					self.add_item(label=__language__(30030), params=retry_args)
-			except nhlgc.LoginError as error:
-				self.display_notification(error)
-				self.add_item(label=__language__(30030), params=retry_args)
-
-	def MODE_archives(self, season):
-		retry_args = {
-			'mode': 'archives',
-			'season': season,
-		}
-
-		try:
-			archives = self.game_center.get_archived_seasons()
-			if season is None:
-				for archive in archives:
-					title = '%d - %d' % (int(archive['season']), int(archive['season']) + 1)
-					self.add_folder(title, {
-						'mode': 'archives',
-						'season': archive['season'],
-					})
-			else:
-				title = '%d - %d: ' % (int(season), int(season) + 1)
-				for archive in archives:
-					if archive['season'] != season:
-						continue
-					for month in archive['months']:
-						self.add_folder(title + __language__(30037 + int(month) - 1), {
-							'mode': 'archives_month',
-							'season': season,
-							'month': month,
-						})
-			return
-		except nhlgc.NetworkError as error:
-			self.display_notification(error)
-		except nhlgc.LoginError as error:
-			self.display_notification(error)
-		except nhlgc.LogicError as error:
-			self.display_notification(error)
-		self.add_item(label=__language__(30030), params=retry_args)
-
-	def MODE_archives_month(self, season, month):
-		retry_args = {
-			'mode': 'archives_month',
-			'season': season,
-			'month': month,
-		}
-
-		try:
-			games = self.game_center.get_archived_month(season, month)
-			for game in games:
-				self.add_folder(
-					label=self.formatted_game_title(game, None),
-					params={'mode': 'view_options'},
-					game=game,
-				)
-			return
-		except nhlgc.NetworkError as error:
-			self.display_notification(error)
-		except nhlgc.LoginError as error:
-			self.display_notification(error)
-		except nhlgc.LogicError as error:
-			self.display_notification(error)
-		self.add_item(label=__language__(30030), params=retry_args)
-
 ##
 # Addon menu system.
 ##
@@ -573,7 +451,6 @@ try:
 		cache_folder = False
 		game_center.add_folder(__language__(30029), {'mode': 'list', 'type': 'today'})
 		game_center.add_folder(__language__(30032), {'mode': 'list', 'type': 'recent'})
-#		game_center.add_folder(__language__(30036), {'mode': 'archives', 'season': None})
 	elif mode == 'list':
 		xbmcplugin.setContent(__addonhandle__, 'episodes')
 		cache_folder = False
@@ -586,16 +463,6 @@ try:
 		xbmcplugin.setContent(__addonhandle__, 'episodes')
 		game = game_center.unserialize_data(__addonargs__.get('game')[0])
 		game_center.MODE_live(game)
-#	elif mode == 'archives':
-#		season = __addonargs__.get('season')[0]
-#		if season == 'None':
-#			season = None
-#		game_center.MODE_archives(season)
-#	elif mode == 'archives_month':
-#		xbmcplugin.setContent(__addonhandle__, 'episodes')
-#		season = __addonargs__.get('season')[0]
-#		month  = __addonargs__.get('month')[0]
-#		game_center.MODE_archives_month(season, month)
 except RuntimeError:
 	pass
 
